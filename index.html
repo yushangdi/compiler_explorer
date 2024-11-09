@@ -159,44 +159,176 @@ function getCode() {
 
     <!-- <script src="data.js"></script> -->
     <script>
+        // Store state in module-level variables
+        let fxGraphId = 0;
+        let jsonData = {};
 
-        function computeSourceMaps(fxGraph, generatedCode) {
-            const leftToRight = [];
-            const rightToLeft = [];
+        function parseLastLineAsJson(codeLines) {
+            // Get the last non-empty line
+            let lastLine = codeLines.filter(line => line.trim()).pop();
             
-            const fxLines = fxGraph;
-            const codeLines = generatedCode;
-            // Initialize leftToRight and rightToLeft as arrays
-            for (let i = 0; i < fxLines.length; i++) {
-                leftToRight[i] = [];
+            // Remove any leading whitespace and the "#" symbol
+            lastLine = lastLine.replace(/^\s*#\s*/, '');
+            
+            try {
+                // Parse the remaining string as JSON
+                return JSON.parse(lastLine);
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                console.log('Problematic line:', lastLine);
+                return null;
             }
-            for (let i = 0; i < codeLines.length; i++) {
-                rightToLeft[i] = [];
+        }
+
+        function extractGraphId(fxGraphLines) {
+            // Get the last non-empty line
+            let lastLine = fxGraphLines.filter(line => line.trim()).pop();
+            
+            // Use regex to extract the number after "graph id:"
+            const match = lastLine.replace(/^\s*#\s*/, '').match(/graph id:\s*(\d+)/);
+            
+            if (match && match[1]) {
+                // Convert to integer and return
+                return parseInt(match[1], 10);
             }
+            
+            console.error('Could not extract graph ID from line:', lastLine);
+            return null;
+        }
 
-            // Regular expression to match node names in fx graph lines
-            const nodeNameRegex = /^\s*(\w+):/;
-
-            // Iterate through each line in the fx graph
-            fxLines.forEach((fxLine, fxIndex) => {
-                const match = fxLine.match(nodeNameRegex);
-                if (match) {
-                    const nodeName = match[1];
-
-                    // Search for the node name in the generated code
-                    codeLines.forEach((codeLine, codeIndex) => {
-                        if (codeLine.includes('%' + nodeName + " :")) {
-                            leftToRight[fxIndex].push(codeIndex);
-                            rightToLeft[codeIndex].push(fxIndex);
+        function createNodeMapping(jsonData, fxGraphId) {
+            // Initialize bidirectional mappings
+            const leftToRight = {}; // FX Graph node name -> Generated code nodes
+            const rightToLeft = {}; // Generated code node -> FX Graph node name
+            
+            // Iterate through each top-level key in the JSON (generated code nodes)
+            for (const [outerKey, nodeArray] of Object.entries(jsonData)) {
+                // For each node array, check if any node matches the graph ID
+                for (const node of nodeArray) {
+                    if (node.graph_id === fxGraphId) {
+                        // Add mapping in both directions
+                        if (!leftToRight[node.name]) {
+                            leftToRight[node.name] = [];
                         }
-                    });
+                        leftToRight[node.name].push(outerKey);
+                        
+                        rightToLeft[outerKey] = node.name;
+                        break;
+                    }
+                    
+                    // Check nested from_node array recursively
+                    let stack = [...(node.from_node || [])];
+                    while (stack.length > 0) {
+                        const currentNode = stack.pop();
+                        if (currentNode.graph_id === fxGraphId) {
+                            // Add mapping in both directions
+                            if (!leftToRight[currentNode.name]) {
+                                leftToRight[currentNode.name] = [];
+                            }
+                            leftToRight[currentNode.name].push(outerKey);
+                            
+                            rightToLeft[outerKey] = currentNode.name;
+                            break;
+                        }
+                        // Add nested from_nodes to stack
+                        if (currentNode.from_node) {
+                            stack.push(...currentNode.from_node);
+                        }
+                    }
+                    
+                    // If we found a match, break the inner loop
+                    if (rightToLeft[outerKey]) break;
                 }
-            });
+            }
+            
             return { leftToRight, rightToLeft };
         }
+
+        function findLineNumbersByContent(lines, content) {
+            return lines
+                .map((line, index) => ({ line, index }))
+                .filter(({ line }) => line.includes(content))
+                .map(({ index }) => index);
+        }
+
+        function convertNodeMappingsToLineNumbers(nodeMappings, fxGraphLines, codeLines) {
+            const lineLeftToRight = {};
+            const lineRightToLeft = {};
+            
+            // Process leftToRight (FX Graph node name -> Generated code nodes)
+            for (const [fxNodeName, genCodeNodes] of Object.entries(nodeMappings.leftToRight)) {
+                // Find line numbers in FX graph that contain this node name
+                const fxLineNumbers = findLineNumbersByContent(fxGraphLines, fxNodeName + ":");
+                
+                // For each FX graph line number
+                fxLineNumbers.forEach(fxLineNum => {
+                    lineLeftToRight[fxLineNum] = [];
+                    
+                    // Find line numbers in generated code for each mapped node
+                    genCodeNodes.forEach(genNodeName => {
+                        const genLineNumbers = findLineNumbersByContent(codeLines, genNodeName + ":");
+                        lineLeftToRight[fxLineNum].push(...genLineNumbers);
+                    });
+                });
+            }
+            
+            // Process rightToLeft (Generated code node -> FX Graph node name)
+            for (const [genNodeName, fxNodeName] of Object.entries(nodeMappings.rightToLeft)) {
+                // Find line numbers in generated code that contain this node
+                const genLineNumbers = findLineNumbersByContent(codeLines, genNodeName + ":");
+                
+                // Find line numbers in FX graph that contain the mapped node name
+                const fxLineNumbers = findLineNumbersByContent(fxGraphLines, fxNodeName + ":");
+                
+                // For each generated code line number
+                genLineNumbers.forEach(genLineNum => {
+                    lineRightToLeft[genLineNum] = fxLineNumbers;
+                });
+            }
+            
+            return { 
+                leftToRight: lineLeftToRight, 
+                rightToLeft: lineRightToLeft 
+            };
+        }
+        // function computeSourceMaps(fxGraph, generatedCode) {
+        //     const leftToRight = [];
+        //     const rightToLeft = [];
+            
+        //     const fxLines = fxGraph;
+        //     const codeLines = generatedCode;
+        //     // Initialize leftToRight and rightToLeft as arrays
+        //     for (let i = 0; i < fxLines.length; i++) {
+        //         leftToRight[i] = [];
+        //     }
+        //     for (let i = 0; i < codeLines.length; i++) {
+        //         rightToLeft[i] = [];
+        //     }
+
+        //     // Regular expression to match node names in fx graph lines
+        //     const nodeNameRegex = /^\s*(\w+):/;
+
+        //     // Iterate through each line in the fx graph
+        //     fxLines.forEach((fxLine, fxIndex) => {
+        //         const match = fxLine.match(nodeNameRegex);
+        //         if (match) {
+        //             const nodeName = match[1];
+
+        //             // Search for the node name in the generated code
+        //             codeLines.forEach((codeLine, codeIndex) => {
+        //                 if (codeLine.includes('%' + nodeName + " :")) {
+        //                     leftToRight[fxIndex].push(codeIndex);
+        //                     rightToLeft[codeIndex].push(fxIndex);
+        //                 }
+        //             });
+        //         }
+        //     });
+        //     return { leftToRight, rightToLeft };
+        // }
         let fxGraphData = getGraph();
         let codeData = getCode();
-        let { leftToRight, rightToLeft } = computeSourceMaps(fxGraphData, codeData);
+        // let { leftToRight, rightToLeft } = computeSourceMaps(fxGraphData, codeData);
+        let { leftToRight, rightToLeft } = createNodeMapping(jsonData, fxGraphId);
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
             const url = urlInput.value.trim();
@@ -224,14 +356,53 @@ function getCode() {
                 
                 if (editorId === 'fxGraph') {
                     fxGraphData = lines;
+                    fxGraphId = extractGraphId(fxGraphData);
+                    if (fxGraphId) {
+                        console.log('Pregrad Graph ID:', fxGraphId);
+                        // If we already have JSON data, create mapping
+                        // if (jsonData) {
+                        //     const mappings = createNodeMapping(jsonData, fxGraphId);
+                        //     console.log('Node Mapping:', nodeMapping);
+                        //     // You can use the mapping here
+                        //     updateUIWithMapping(nodeMapping);
+                        // }
+                    }
                 } else {
                     codeData = lines;
+                    // Parse the last line as JSON
+                    jsonData = parseLastLineAsJson(codeData);
+                    if (jsonData) {
+                        console.log('Parsed JSON:', jsonData);
+                        // If we already have graph ID, create mapping
+                        // if (fxGraphId) {
+                        //     const mappings = createNodeMapping(jsonData, fxGraphId);
+                        //     console.log('Node Mapping:', nodeMapping);
+                        //     // You can use the mapping here
+                        //     updateUIWithMapping(nodeMapping);
+                        // }
+                    }
                 }
-                console.log(fxGraphData, codeData);
-                const mappings = computeSourceMaps(fxGraphData, codeData);
-                console.log(mappings);
-                leftToRight = mappings.leftToRight;
-                rightToLeft = mappings.rightToLeft;
+                // console.log(jsonData, fxGraphId);
+                // let { leftToRight, rightToLeft } = createNodeMapping(jsonData, fxGraphId);
+                // console.log("Node Mapping:")
+                // console.log(leftToRight);
+                // console.log(rightToLeft)
+                const nodeMappings = createNodeMapping(jsonData, fxGraphId);
+                console.log('Node Mappings:', nodeMappings);
+                
+                // Convert to line number mappings
+                const lineMappings = convertNodeMappingsToLineNumbers(
+                    nodeMappings,
+                    fxGraphData,
+                    codeData
+                );
+                console.log('Line Mappings:', lineMappings);
+                
+                // Update global mappings
+                leftToRight = lineMappings.leftToRight;
+                rightToLeft = lineMappings.rightToLeft;
+                // leftToRight = mappings.leftToRight;
+                // rightToLeft = mappings.rightToLeft;
                 populateEditor(fxGraph, fxGraphData, leftToRight);
                 populateEditor(generatedCode, codeData, rightToLeft);
 
@@ -250,7 +421,7 @@ function getCode() {
                 sourceEditor.children[lineNumber].classList.add('highlight');
             }
             // highlight target editor
-            const correspondingLines = mapping[lineNumber - 1] || [];
+            const correspondingLines = mapping[lineNumber] || [];
             correspondingLines.forEach(line => {
                 const targetLine = targetEditor.children[line];
                 if (targetLine) {
@@ -272,11 +443,16 @@ function getCode() {
 
             if (target) {
                 const lineNumber = Array.from(sourceEditor.children).indexOf(target);
-                const correspondingLines = mapping[lineNumber - 1] || [];
+                console.log(lineNumber)
+                console.log(mapping)
+
+                const correspondingLines = mapping[lineNumber] || [];
+                
+                console.log(correspondingLines)
 
                 if (correspondingLines.length > 0) {
                     const firstCorrespondingLine = correspondingLines[0];
-                    const targetLine = targetEditor.children[firstCorrespondingLine - 1];
+                    const targetLine = targetEditor.children[firstCorrespondingLine + 1];
                     if (targetLine) {
                         targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
