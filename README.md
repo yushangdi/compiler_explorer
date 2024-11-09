@@ -1,1 +1,1 @@
-To run: `python -m http.server` and open `index.html`
+To run: `python -m http.server` and open `http://localhost:8000/`
