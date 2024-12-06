@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Bidirectional Highlighting with Draggable Divider</title>
+    <style>
+        body { 
+            display: flex; 
+            flex-direction: column;
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .url-inputs {
+            display: flex;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        .url-input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .url-input input {
+            width: 100%;
+            padding: 5px;
+        }
+        .editor-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .editor { 
+            height: 100%; 
+            overflow-y: auto; 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            box-sizing: border-box;
+            flex: 1;
+            font-family: monospace;
+        }
+        .line { 
+            padding: 2px 5px; 
+            cursor: pointer; 
+            white-space: nowrap;
+        }
+        .highlight { 
+            background-color: yellow; 
+        }
+        .mapped-line {
+            font-weight: bold;
+        }
+        .line-number { 
+            color: #888; 
+            display: inline-block; 
+            width: 30px; 
+            text-align: right; 
+            margin-right: 10px; 
+        }
+        .divider {
+            width: 10px;
+            background-color: #ccc;
+            cursor: col-resize;
+        }
+        .line-content {
+            white-space: pre;
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="url-inputs">
+        <div class="url-input">
+            <input type="text" id="fxGraphUrl" placeholder="Paste FX Graph URL here">
+            <button onclick="loadFile('fxGraph')">Load FX Graph</button>
+        </div>
+        <div class="url-input">
+            <input type="text" id="generatedCodeUrl" placeholder="Paste Generated Code URL here">
+            <button onclick="loadFile('generatedCode')">Load Post Grad Graph</button>
+        </div>
+        <div class="url-input">
+            <button onclick="updateUrlWithInputs()">Update URL with Inputs</button>
+        </div>
+    </div>
+    <div class="editor-container">
+        <div id="fxGraph" class="editor"></div>
+        <div id="divider" class="divider"></div>
+        <div id="generatedCode" class="editor"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let fxGraphData = null;
+        let codeData = null;
+        let leftToRight = {};
+        let rightToLeft = {};
+
+        async function loadFile(editorId) {
+            const urlInput = document.getElementById(`${editorId}Url`);
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+            
+            try {
+                // Load file content from backend
+                const response = await fetch('/load_file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load file');
+                }
+                
+                const data = await response.json();
+                const lines = data.lines;
+                
+                if (editorId === 'fxGraph') {
+                    fxGraphData = lines;
+                } else {
+                    codeData = lines;
+                }
+                
+                // Only process mapping if we have both sets of data
+                if (fxGraphData && codeData) {
+                    const mappings = await processMapping(fxGraphData, codeData);
+                    if (mappings) {
+                        leftToRight = mappings.leftToRight;
+                        rightToLeft = mappings.rightToLeft;
+                        
+                        populateEditor(fxGraph, fxGraphData, leftToRight);
+                        populateEditor(generatedCode, codeData, rightToLeft);
+                    }
+                } else {
+                    // If we only have one set of data, just populate that editor
+                    const editor = document.getElementById(editorId);
+                    const mapping = editorId === 'fxGraph' ? leftToRight : rightToLeft;
+                    populateEditor(editor, lines, mapping);
+                }
+                
+            } catch (error) {
+                console.error('Error loading file:', error);
+                alert('Error loading file. Please check the URL and try again.');
+            }
+        }
+
+        async function processMapping(fxGraphData, codeData) {
+            try {
+                const response = await fetch('/process_mapping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fxGraphData,
+                        codeData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to process mapping');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error processing mapping:', error);
+                return null;
+            }
+        }
+
+        function populateEditor(editor, data, mapping) {
+            editor.innerHTML = '';
+            data.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.className = 'line';
+                if (mapping[index] && mapping[index].length > 0) {
+                    div.classList.add('mapped-line');
+                } 
+                const lineNumber = document.createElement('span');
+                lineNumber.className = 'line-number';
+                lineNumber.textContent = index + 1;
+                div.appendChild(lineNumber);
+                const lineContent = document.createElement('span');
+                lineContent.className = 'line-content';
+                lineContent.textContent = line;
+                div.appendChild(lineContent);
+
+                editor.appendChild(div);
+            });
+        }
+
+        function highlightLines(sourceEditor, targetEditor, mapping, lineNumber) {
+            // clear all highlights first
+            sourceEditor.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+            targetEditor.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+            // highlight source editor
+            if(sourceEditor.children[lineNumber]){
+                sourceEditor.children[lineNumber].classList.add('highlight');
+            }
+            // highlight target editor
+            const correspondingLines = mapping[lineNumber] || [];
+            correspondingLines.forEach(line => {
+                const targetLine = targetEditor.children[line];
+                if (targetLine) {
+                    targetLine.classList.add('highlight');
+                }
+            });
+        }
+
+        function handleMouseMove(event, sourceEditor, targetEditor, mapping) {
+            const target = event.target.closest('.line');
+            if (target) {
+                const lineNumber = Array.from(sourceEditor.children).indexOf(target);
+                highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
+            }
+        }
+
+        function handleClick(event, sourceEditor, targetEditor, mapping) {
+            const target = event.target.closest('.line');
+            if (target) {
+                const lineNumber = Array.from(sourceEditor.children).indexOf(target);
+                const correspondingLines = mapping[lineNumber] || [];
+                
+                if (correspondingLines.length > 0) {
+                    const firstCorrespondingLine = correspondingLines[0];
+                    const targetLine = targetEditor.children[firstCorrespondingLine];
+                    if (targetLine) {
+                        targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
+                    }
+                }
+            }
+        }
+
+        function updateUrlWithInputs() {
+            const fxGraphUrl = document.getElementById('fxGraphUrl').value;
+            const generatedCodeUrl = document.getElementById('generatedCodeUrl').value;
+            
+            let newUrl = window.location.origin + window.location.pathname + '?';
+            
+            if (fxGraphUrl) {
+                newUrl += 'fxGraphUrl=' + encodeURIComponent(fxGraphUrl);
+            }
+            
+            if (generatedCodeUrl) {
+                if (fxGraphUrl) newUrl += '&';
+                newUrl += 'generatedCodeUrl=' + encodeURIComponent(generatedCodeUrl);
+            }
+            
+            window.history.pushState({}, '', newUrl);
+        }
+
+        // Initialize the application
+        const fxGraph = document.getElementById('fxGraph');
+        const generatedCode = document.getElementById('generatedCode');
+        const divider = document.getElementById('divider');
+
+        // Set up draggable divider
+        let isDragging = false;
+        let startX, startLeftWidth;
+
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startLeftWidth = fxGraph.offsetWidth;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const newLeftWidth = startLeftWidth + dx;
+            const containerWidth = document.querySelector('.editor-container').offsetWidth;
+            
+            if (newLeftWidth > 100 && newLeftWidth < containerWidth - 100) {
+                fxGraph.style.width = `${newLeftWidth}px`;
+                generatedCode.style.width = `${containerWidth - newLeftWidth - divider.offsetWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Set up event listeners for highlighting and scrolling
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToRight));
+        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, rightToLeft));
+
+        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCode, leftToRight));
+        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, fxGraph, rightToLeft));
+
+        fxGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCode.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+
+        // Load from URL parameters if present
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fxGraphUrl = urlParams.get('fxGraphUrl');
+            const generatedCodeUrl = urlParams.get('generatedCodeUrl');
+            
+            if (fxGraphUrl) {
+                document.getElementById('fxGraphUrl').value = fxGraphUrl;
+                loadFile('fxGraph');
+            }
+            if (generatedCodeUrl) {
+                document.getElementById('generatedCodeUrl').value = generatedCodeUrl;
+                loadFile('generatedCode');
+            }
+        };
+
+        // Set initial editor widths
+        function setInitialEditorWidths() {
+            const containerWidth = document.querySelector('.editor-container').offsetWidth;
+            const editorWidth = (containerWidth - divider.offsetWidth) / 2;
+            fxGraph.style.width = `${editorWidth}px`;
+            generatedCode.style.width = `${editorWidth}px`;
+        }
+
+        window.addEventListener('load', setInitialEditorWidths);
+        window.addEventListener('resize', setInitialEditorWidths);
+    </script>
+</body>
+</html>

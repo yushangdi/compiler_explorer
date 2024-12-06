@@ -1,1 +1,2 @@
-To run: `python -m http.server` and open `http://localhost:8000/`
+`python app.py`
+`http://localhost:5000`
