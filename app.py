@@ -64,32 +64,25 @@ def extract_graph_id(fx_graph_lines):
 def create_node_mapping(json_data, fx_graph_id):
     """Create bidirectional mappings between FX graph nodes and generated code nodes"""
     try:
-        left_to_right = defaultdict(list) # FX Graph node name -> Generated code nodes
-        right_to_left = {}  # Generated code node -> FX Graph node name
+        left_to_right = defaultdict(set)
+        right_to_left = defaultdict(set)
 
         for outer_key, node_array in json_data.items():
             for node in node_array:
+                # Check the current node first
                 if node.get('graph_id') == fx_graph_id:
-                    if node['node_name'] not in left_to_right:
-                        left_to_right[node['node_name']] = []
-                    left_to_right[node['node_name']].append(outer_key)
-                    right_to_left[outer_key] = node['node_name']
-                    break
-
+                    left_to_right[node['node_name']].add(outer_key)
+                    right_to_left[outer_key].add(node['node_name'])
+                
                 # Check nested from_node array recursively
-                stack = node.get('from_node', [])
+                stack = [(n, outer_key) for n in node.get('from_node', [])]
                 while stack:
-                    current_node = stack.pop()
+                    current_node, parent_key = stack.pop()
                     if current_node.get('graph_id') == fx_graph_id:
-                        # if current_node['name'] not in left_to_right:
-                        #     left_to_right[current_node['name']] = []
-                        left_to_right[current_node['node_name']].append(outer_key)
-                        right_to_left[outer_key] = current_node['node_name']
-                        break
-                    stack.extend(current_node.get('from_node', []))
+                        left_to_right[current_node['node_name']].add(parent_key)
+                        right_to_left[parent_key].add(current_node['node_name'])
+                    stack.extend((n, parent_key) for n in current_node.get('from_node', []))
 
-                if outer_key in right_to_left:
-                    break
         return {'leftToRight': left_to_right, 'rightToLeft': right_to_left}
 
     except AttributeError as e:
@@ -131,12 +124,14 @@ def convert_node_mappings_to_line_numbers(node_mappings, fx_graph_lines, code_li
                 line_left_to_right[fx_line_num].extend(gen_line_numbers)
 
     # Process rightToLeft
-    for gen_node_name, fx_node_name in node_mappings['rightToLeft'].items():
+    for gen_node_name, fx_node_names in node_mappings['rightToLeft'].items():
         gen_line_numbers = find_line_numbers_by_content(code_lines, f"{gen_node_name}:")
-        fx_line_numbers = find_line_numbers_by_content(fx_graph_lines, f"{fx_node_name}:")
-
+        
         for gen_line_num in gen_line_numbers:
-            line_right_to_left[gen_line_num] = fx_line_numbers
+            line_right_to_left[gen_line_num] = []
+            for fx_node_name in fx_node_names:
+                fx_line_numbers = find_line_numbers_by_content(fx_graph_lines, f"{fx_node_name}:")
+                line_right_to_left[gen_line_num].extend(fx_line_numbers)
 
     return {
         'leftToRight': line_left_to_right,
