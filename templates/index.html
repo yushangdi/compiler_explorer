@@ -22,6 +22,9 @@
         .url-input {
             flex: 1;
             margin-right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .url-input input {
             width: 100%;
@@ -68,6 +71,50 @@
             white-space: pre;
             display: inline;
         }
+        .json-popup {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 400px;
+            max-height: 300px;
+            overflow: auto;
+            z-index: 1000;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .json-popup .close-button {
+            position: sticky;
+            float: right;
+            top: 0;
+            right: 0;
+            cursor: pointer;
+            font-size: 20px;
+            background: white;
+            padding: 0 5px;
+            margin-left: 10px;
+        }
+
+        #jsonContent {
+            margin-top: 10px;
+        }
+
+        .toggle-container {
+            margin-left: 20px;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            min-width: 200px;
+            white-space: nowrap;
+        }
+
+        .toggle-container input[type="checkbox"] {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -82,6 +129,10 @@
         </div>
         <div class="url-input">
             <button onclick="updateUrlWithInputs()">Update URL with Inputs</button>
+            <label class="toggle-container">
+                <input type="checkbox" id="jsonPopupToggle" checked>
+                Show JSON on Click
+            </label>
         </div>
     </div>
     <div class="editor-container">
@@ -90,12 +141,18 @@
         <div id="generatedCode" class="editor"></div>
     </div>
 
+    <div id="jsonPopup" class="json-popup">
+        <span class="close-button" onclick="closeJsonPopup()">×</span>
+        <pre id="jsonContent"></pre>
+    </div>
+
     <script>
         // Global variables
         let fxGraphData = null;
         let codeData = null;
         let leftToRight = {};
         let rightToLeft = {};
+        let jsonData = null;
 
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
@@ -144,6 +201,22 @@
                     const editor = document.getElementById(editorId);
                     const mapping = editorId === 'fxGraph' ? leftToRight : rightToLeft;
                     populateEditor(editor, lines, mapping);
+                }
+                
+                if (editorId === 'generatedCode') {
+                    // Store the JSON data when loading generated code
+                    const jsonLines = lines.filter(line => line.trim().startsWith('#'));
+                    if (jsonLines.length > 0) {
+                        const lastJsonLine = jsonLines[jsonLines.length - 1];
+                        // Remove the first # and any whitespace
+                        const jsonString = lastJsonLine.replace(/^\s*#\s*/, '').trim();
+                        try {
+                            jsonData = JSON.parse(jsonString);
+                        } catch (e) {
+                            console.error('Failed to parse JSON:', e);
+                            console.error('Problematic line:', jsonString);
+                        }
+                    }
                 }
                 
             } catch (error) {
@@ -237,6 +310,26 @@
                         highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
                     }
                 }
+                
+                // Show JSON popup for generatedCode clicks when toggle is on
+                if (sourceEditor.id === 'generatedCode' && jsonData) {
+                    if (document.getElementById('jsonPopupToggle').checked) {
+                        const lineContent = target.textContent;
+                        const nodeName = lineContent.match(/([^:\s]+):/)?.[1];
+                        if (nodeName) {
+                            let nodeData = null;
+                            for (const [key, nodes] of Object.entries(jsonData)) {
+                                if (key === nodeName) {
+                                    nodeData = nodes;
+                                    break;
+                                }
+                            }
+                            if (nodeData) {
+                                showJsonPopup(nodeData, event);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -325,6 +418,47 @@
 
         window.addEventListener('load', setInitialEditorWidths);
         window.addEventListener('resize', setInitialEditorWidths);
+
+        function showJsonPopup(content, event) {
+            const popup = document.getElementById('jsonPopup');
+            const jsonContent = document.getElementById('jsonContent');
+            
+            // Format the JSON nicely
+            const formattedJson = JSON.stringify(content, null, 2);
+            jsonContent.textContent = formattedJson;
+            
+            // Position the popup near the click
+            popup.style.left = `${event.pageX + 10}px`;
+            popup.style.top = `${event.pageY + 10}px`;
+            
+            // Show the popup
+            popup.style.display = 'block';
+            
+            // Adjust position if popup goes off screen
+            const rect = popup.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            if (rect.right > viewportWidth) {
+                popup.style.left = `${event.pageX - rect.width - 10}px`;
+            }
+            if (rect.bottom > viewportHeight) {
+                popup.style.top = `${event.pageY - rect.height - 10}px`;
+            }
+        }
+
+        function closeJsonPopup() {
+            document.getElementById('jsonPopup').style.display = 'none';
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('jsonPopup');
+            if (event.target.closest('.json-popup') || event.target.closest('.line')) {
+                return;
+            }
+            popup.style.display = 'none';
+        });
     </script>
 </body>
 </html>

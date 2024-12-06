@@ -90,8 +90,6 @@ def create_node_mapping(json_data, fx_graph_id):
 
                 if outer_key in right_to_left:
                     break
-        print("left_to_right", left_to_right)
-        print("right_to_left", right_to_left)
         return {'leftToRight': left_to_right, 'rightToLeft': right_to_left}
 
     except AttributeError as e:
@@ -192,7 +190,6 @@ def process_mapping():
         
         # Create mappings
         node_mappings = create_node_mapping(json_data, fx_graph_id)
-        print("node_mappings", node_mappings)
         line_mappings = convert_node_mappings_to_line_numbers(
             node_mappings,
             fx_graph_lines,
