@@ -7,6 +7,8 @@ from collections import defaultdict
 import logging
 import traceback
 
+from utils import analyze_unmatched_lines
+
 app = Flask(__name__)
 
 logger = logging.getLogger(__name__)
@@ -106,32 +108,50 @@ def create_node_mapping(json_data, fx_graph_id):
         logger.error(traceback.format_exc())
         raise
 
-def find_line_numbers_by_content(lines, content):
-    return [i for i, line in enumerate(lines) if content in line]
-
 def convert_node_mappings_to_line_numbers(node_mappings, fx_graph_lines, code_lines):
+
+    def valid_line(line):
+        stripped = line.strip()
+        return stripped and not stripped.startswith('#')
+    
+    # Create lookup maps for both files
+    fx_node_to_lines = {}
+    code_node_to_lines = {}
+    
+    # Build FX graph lookup map
+    for i, line in enumerate(fx_graph_lines):
+        if valid_line(line):
+            node_name = line.strip().split('=', 1)[0].split(':', 1)[0].strip()
+            if node_name:
+                fx_node_to_lines[node_name] = i
+    
+    # Build code lookup map
+    for i, line in enumerate(code_lines):
+        if valid_line(line):
+            node_name = line.strip().split('=', 1)[0].split(':', 1)[0].strip()
+            if node_name:
+                code_node_to_lines[node_name] = i
+    
     line_left_to_right = {}
     line_right_to_left = {}
 
-    # Process leftToRight
+    # Process leftToRight using lookup maps
     for fx_node_name, gen_code_nodes in node_mappings['leftToRight'].items():
-        fx_line_numbers = find_line_numbers_by_content(fx_graph_lines, f"{fx_node_name}:")
-
-        for fx_line_num in fx_line_numbers:
+        if fx_node_name in fx_node_to_lines:
+            fx_line_num = fx_node_to_lines[fx_node_name]
             line_left_to_right[fx_line_num] = []
             for gen_node_name in gen_code_nodes:
-                gen_line_numbers = find_line_numbers_by_content(code_lines, f"{gen_node_name}:")
-                line_left_to_right[fx_line_num].extend(gen_line_numbers)
+                if gen_node_name in code_node_to_lines:
+                    line_left_to_right[fx_line_num].append(code_node_to_lines[gen_node_name])
 
-    # Process rightToLeft
+    # Process rightToLeft using lookup maps
     for gen_node_name, fx_node_names in node_mappings['rightToLeft'].items():
-        gen_line_numbers = find_line_numbers_by_content(code_lines, f"{gen_node_name}:")
-        
-        for gen_line_num in gen_line_numbers:
+        if gen_node_name in code_node_to_lines:
+            gen_line_num = code_node_to_lines[gen_node_name]
             line_right_to_left[gen_line_num] = []
             for fx_node_name in fx_node_names:
-                fx_line_numbers = find_line_numbers_by_content(fx_graph_lines, f"{fx_node_name}:")
-                line_right_to_left[gen_line_num].extend(fx_line_numbers)
+                if fx_node_name in fx_node_to_lines:
+                    line_right_to_left[gen_line_num].append(fx_node_to_lines[fx_node_name])
 
     return {
         'leftToRight': line_left_to_right,
@@ -165,7 +185,7 @@ def process_mapping():
     try:
         data = request.json
         fx_graph_lines = data['fxGraphData']
-        code_lines = data['codeData']
+        post_grad_graph_lines = data['codeData']
         
         # Extract graph ID
         fx_graph_id = extract_graph_id(fx_graph_lines)
@@ -175,7 +195,7 @@ def process_mapping():
         
         # Parse JSON data from last line of code
         try:
-            for line in reversed(code_lines):
+            for line in reversed(post_grad_graph_lines):
                 if line.strip().startswith('#'):
                     json_data = json.loads(line.strip('# '))
                     break
@@ -188,8 +208,10 @@ def process_mapping():
         line_mappings = convert_node_mappings_to_line_numbers(
             node_mappings,
             fx_graph_lines,
-            code_lines
+            post_grad_graph_lines
         )
+
+        print(analyze_unmatched_lines(post_grad_graph_lines, line_mappings))
         
         return jsonify(line_mappings)
         

@@ -315,7 +315,11 @@
                 if (sourceEditor.id === 'generatedCode' && jsonData) {
                     if (document.getElementById('jsonPopupToggle').checked) {
                         const lineContent = target.textContent;
-                        const nodeName = lineContent.match(/([^:\s]+):/)?.[1];
+                        const nodeName = lineContent
+                            .replace(/^\d+\s+/, '')  // Remove leading line number and spaces
+                            .split('=')[0]
+                            .split(':')[0]
+                            .trim();
                         if (nodeName) {
                             let nodeData = null;
                             for (const [key, nodes] of Object.entries(jsonData)) {
