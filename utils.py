@@ -23,13 +23,13 @@ def analyze_unmatched_lines(post_grad_lines: List[str],
     
     # Find lines that have no matches in the mappings
     for i, line in enumerate(post_grad_lines):
-        if (is_valid_line(line) 
-            and i not in line_mappings['rightToLeft']):
-            unmatched_count += 1
-            # Extract node name (content before ':' or '=')
-            stripped_line = line.strip()
-            node_content = stripped_line.split('=', 1)[0].split(':', 1)[0]
-            unmatched_nodes.append(node_content.strip())
+        if is_valid_line(line):
+            if i not in line_mappings['rightToLeft'] or len(line_mappings['rightToLeft'][i]) == 0:
+                unmatched_count += 1
+                # Extract node name (content before ':' or '=')
+                stripped_line = line.strip()
+                node_content = stripped_line.split('=', 1)[0].split(':', 1)[0]
+                unmatched_nodes.append(node_content.strip())
             
     return {
         'total_valid_lines': total_valid_lines,
