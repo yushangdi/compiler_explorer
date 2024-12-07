@@ -1,0 +1,35 @@
+class <lambda>(torch.nn.Module):
+    def forward(self):
+        arg0_1: "f32[10, 20][20, 1]cuda:0"; arg1_1: "f32[20, 30][30, 1]cuda:0"; arg2_1: "f32[10, 30][30, 1]cuda:0";
+
+        arg0_1, arg1_1, arg2_1, = fx_pytree.tree_flatten_spec([], self._in_spec)
+         # File: /mnt/xarfuse/uid-659722/0b3ecf82-seed-nspid4026531836_cgpid31950599-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:607 in forward, code: x = a * 3.14
+        from_node=[('x', '<built-in function mul>')]
+        pass_source=['aot_export_module']
+        mul: "f32[10, 20][20, 1]cuda:0" = torch.ops.aten.mul.Tensor(arg0_1, 3.14);  arg0_1 = None
+
+        # No stacktrace found for following nodes
+        from_node=[('y', '<built-in method addmm of type object at 0x562ca965c9a0>'), ('addmm', 'aten.addmm.default')]
+        pass_source=['aot_export_module', 'pattern_matcher', 'pattern_matcher']
+        mm_default: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mm.default(mul, arg1_1);  mul = arg1_1 = None
+        from_node=[('y', '<built-in method addmm of type object at 0x562ca965c9a0>'), ('addmm', 'aten.addmm.default')]
+        pass_source=['aot_export_module', 'pattern_matcher', 'pattern_matcher']
+        add_tensor: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.add.Tensor(mm_default, arg2_1);  mm_default = arg2_1 = None
+
+         # File: /mnt/xarfuse/uid-659722/0b3ecf82-seed-nspid4026531836_cgpid31950599-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:609 in forward, code: z = torch.nn.functional.gelu(y)
+        from_node=[('z', '<built-in function gelu>')]
+        pass_source=['aot_export_module']
+        mul_1: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(add_tensor, 0.5)
+        from_node=[('z', '<built-in function gelu>')]
+        pass_source=['aot_export_module']
+        mul_2: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(add_tensor, 0.7071067811865476);  add_tensor = None
+        from_node=[('z', '<built-in function gelu>')]
+        pass_source=['aot_export_module']
+        erf: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.erf.default(mul_2);  mul_2 = None
+        from_node=[('z', '<built-in function gelu>')]
+        pass_source=['aot_export_module']
+        add: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.add.Tensor(erf, 1);  erf = None
+        from_node=[('z', '<built-in function gelu>')]
+        pass_source=['aot_export_module']
+        mul_3: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(mul_1, add);  mul_1 = add = None
+        return (mul_3,)
