@@ -1,36 +1,34 @@
 <script>
     let fx_str = `
-    INFO:torch._functorch._aot_autograd.dispatch_and_compile_graph.__aot_graphs:TRACED GRAPH
-    ===== Forward graph 0 =====
-    /data/users/chilli/pytorch/torch/fx/_lazy_graph_module.py class <lambda>(torch.nn.Module):
-	 def forward(self, arg0_1: "f32[10, 20][20, 1]cuda:0", arg1_1: "f32[20, 30][30, 1]cuda:0", arg2_1: "f32[10, 30][30, 1]cuda:0"):
-         # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:607 in forward, code: x = a * 3.14
-        from_node=[('x', '<built-in function mul>')]
-        pass_source=[]
-        mul: "f32[10, 20][20, 1]cuda:0" = torch.ops.aten.mul.Tensor(arg0_1, 3.14);  arg0_1 = None
+class <lambda>(torch.nn.Module):
+    def forward(self, arg0_1: "f32[10, 20][20, 1]cuda:0", arg1_1: "f32[20, 30][30, 1]cuda:0", arg2_1: "f32[10, 30][30, 1]cuda:0"):
+        # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:607 in forward, code: x = a * 3.14
+    from_node=[('x', '<built-in function mul>')]
+    pass_source=[]
+    mul: "f32[10, 20][20, 1]cuda:0" = torch.ops.aten.mul.Tensor(arg0_1, 3.14);  arg0_1 = None
 
-         # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:608 in forward, code: y = torch.addmm(c, x, b)
-        from_node=[('y', '<built-in method addmm of type object at 0x55c7a71989a0>')]
-        pass_source=[]
-        addmm: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.addmm.default(arg2_1, mul, arg1_1);  arg2_1 = mul = arg1_1 = None
+        # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:608 in forward, code: y = torch.addmm(c, x, b)
+    from_node=[('y', '<built-in method addmm of type object at 0x55c7a71989a0>')]
+    pass_source=[]
+    addmm: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.addmm.default(arg2_1, mul, arg1_1);  arg2_1 = mul = arg1_1 = None
 
-         # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:609 in forward, code: z = torch.nn.functional.gelu(y)
-        from_node=[('z', '<built-in function gelu>')]
-        pass_source=[]
-        mul_1: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(addmm, 0.5)
-        from_node=[('z', '<built-in function gelu>')]
-        pass_source=[]
-        mul_2: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(addmm, 0.7071067811865476);  addmm = None
-        from_node=[('z', '<built-in function gelu>')]
-        pass_source=[]
-        erf: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.erf.default(mul_2);  mul_2 = None
-        from_node=[('z', '<built-in function gelu>')]
-        pass_source=[]
-        add: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.add.Tensor(erf, 1);  erf = None
-        from_node=[('z', '<built-in function gelu>')]
-        pass_source=[]
-        mul_3: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(mul_1, add);  mul_1 = add = None
-        return (mul_3,)
+        # File: /mnt/xarfuse/uid-659722/e645270b-seed-nspid4026531836_cgpid16800532-ns-4026531841/caffe2/test/inductor/test_aot_inductor.py:609 in forward, code: z = torch.nn.functional.gelu(y)
+    from_node=[('z', '<built-in function gelu>')]
+    pass_source=[]
+    mul_1: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(addmm, 0.5)
+    from_node=[('z', '<built-in function gelu>')]
+    pass_source=[]
+    mul_2: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(addmm, 0.7071067811865476);  addmm = None
+    from_node=[('z', '<built-in function gelu>')]
+    pass_source=[]
+    erf: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.erf.default(mul_2);  mul_2 = None
+    from_node=[('z', '<built-in function gelu>')]
+    pass_source=[]
+    add: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.add.Tensor(erf, 1);  erf = None
+    from_node=[('z', '<built-in function gelu>')]
+    pass_source=[]
+    mul_3: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(mul_1, add);  mul_1 = add = None
+    return (mul_3,)
     `
     let code_str = `
 from ctypes import c_void_p, c_long, c_int
@@ -1058,15 +1056,13 @@ void AOTInductorModel::run_impl(
     <script>
 
         // TODO: ideally this should be calculated here (?)
-        let jsonString = '{"triton_poi_fused_mul_0": ["mul"], "triton_poi_fused_addmm_gelu_1": ["mul_2", "mul_3", "add_tensor", "add", "erf", "mul_1"]}'
-        let jsonString2 = '{"triton_poi_fused_mul_0": ["if (kernels.triton_poi_fused_mul_0 == nullptr)"], "triton_poi_fused_addmm_gelu_2": ["if (kernels.triton_poi_fused_addmm_gelu_1 == nullptr)"] }'
+        let jsonString = '{"triton_poi_fused_mul_0": ["mul"], "triton_poi_fused_addmm_gelu_1": ["mul_2", "mul_3", "add_tensor", "add", "erf", "mul_1", "addmm"]}'
         const jsonData = JSON.parse(jsonString)
-        const jsonData2 = JSON.parse(jsonString2)
-
 
         function computeSourceMaps(jsonData, fxGraph, generatedCode, generatedCppCode) {
             const leftToRight = [];
-            const rightToLeft = [];
+            const leftToMid = [];
+            const midToLeft = [];
             const fxLines = fxGraph;
             const codeLines = generatedCode;
             const cppCodeLines = generatedCppCode;
@@ -1074,8 +1070,11 @@ void AOTInductorModel::run_impl(
             for (let i = 0; i < fxLines.length; i++) {
                 leftToRight[i] = [];
             }
+            for (let i = 0; i < fxLines.length; i++) {
+                leftToMid[i] = [];
+            }
             for (let i = 0; i < codeLines.length; i++) {
-                rightToLeft[i] = [];
+                midToLeft[i] = [];
             }
 
             // parse the jsonData here
@@ -1101,38 +1100,34 @@ void AOTInductorModel::run_impl(
                     const nodeName = match[1];
                     const kernelNames = nodeName in transformedObject ? transformedObject[nodeName] : null;
                     // Search for the node name in the generated code
-                    // TODO(?): map it to the entire triton kernel codegen wrapper code
                     codeLines.forEach((codeLine, codeIndex) => {
                         if (kernelNames && kernelNames.some(kernelName => codeLine.includes(kernelName)) && codeLine.includes("= async_compile.triton(")) {
+                            leftToMid[fxIndex].push(codeIndex);
+                            midToLeft[codeIndex].push(fxIndex);
+                        }
+                    });
+                    let pushCodeIndex = false;
+                    cppCodeLines.forEach((codeLine, codeIndex) => {
+                        if (kernelNames && kernelNames.some(kernelName => codeLine.includes(kernelName)) && codeLine.includes("== nullptr")) {
+                            pushCodeIndex = true;
+                        }
+                        if (pushCodeIndex) {
                             leftToRight[fxIndex].push(codeIndex);
-                            rightToLeft[codeIndex].push(fxIndex);
+                            if (codeLine.includes(".reset()")) {
+                                pushCodeIndex = false;
+                            }
                         }
                     });
                 }
             });
 
-            // const kernelNameRegex = /^triton_[a-zA-Z0-9_]+$/;
-            // // Iterate through each line in the fx graph
-            // codeLines.forEach((codeLine, codeIndex) => {
-            //     const match = codeLine.match(kernelNameRegex);
-            //     if (match) {
-            //         const kernelName = match[1];
-            //         cppCodeLines.forEach((cppCodeLine, cppCodeIndex) => {
-            //             if (cppCodeLine.includes(kernelName) && cppCodeLine.includes("== nullptr)")
-            //             ) {
-            //                 midToRight[codeIndex].push(cppCodeIndex);
-            //             }
-            //         });
-            //     }
-            // });
-
-            return { leftToRight, rightToLeft };
+            return { leftToRight, midToLeft, leftToMid };
         }
 
         let fxGraphData = getGraph();
         let codeData = getCode();
         let cppCodeData = getCppCode();
-        let { leftToRight, rightToLeft} = computeSourceMaps(jsonData, fxGraphData, codeData, cppCodeData);
+        let { leftToRight, midToLeft, leftToMid} = computeSourceMaps(jsonData, fxGraphData, codeData, cppCodeData);
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
             const url = urlInput.value.trim();
@@ -1169,9 +1164,11 @@ void AOTInductorModel::run_impl(
                 console.log(mappings);
 
                 leftToRight = mappings.leftToRight;
-                rightToLeft = mappings.rightToLeft;
+                midToLeft = mappings.midToLeft;
+                leftToMid = mappings.leftToMid;
                 populateEditor(fxGraph, fxGraphData, leftToRight);
-                populateEditor(generatedCode, codeData, rightToLeft);
+                populateEditor(generatedCode, codeData, midToLeft);
+                populateEditor(fxGraph, fxGraphData, leftToMid);
             } catch (error) {
                 console.error('Error loading file:', error);
                 alert('Error loading file. Please check the URL and try again.');
@@ -1278,7 +1275,9 @@ void AOTInductorModel::run_impl(
 
         // Populate editors with shading
         populateEditor(fxGraph, fxGraphData, leftToRight);
-        populateEditor(generatedCode, codeData, rightToLeft);
+        populateEditor(generatedCode, codeData, midToLeft);
+        populateEditor(fxGraph, fxGraphData, leftToMid);
+
 
         // Modify the draggable functionality
         let isDragging = false;
@@ -1308,14 +1307,18 @@ void AOTInductorModel::run_impl(
 
 
         // Event listeners for highlighting and scrolling
-        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToRight));
-        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, rightToLeft));
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCppCode, leftToRight));
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToMid));
+        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, midToLeft));
 
+        // establish a fxgraph <-> generate cpp code mapping might be feasible
+        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCode, leftToMid));
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCppCode, leftToRight));
-        generatedCppCode.addEventListener('click', (event) => handleClick(event, generatedCppCode, fxGraph, rightToLeft));
+        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, fxGraph, midToLeft));
 
+        fxGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         fxGraph.addEventListener('mouseout', () => generatedCppCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-        generatedCppCode.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCode.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
     </script>
 </body>
 
