@@ -1,5 +1,5 @@
 // codegen_kernel_to_post_grad_nodes_mapping.txt
-// {"kernel_name": ["post_grad_node1", "post_grad_node2", ...]", ...}
+// {"kernel_name": ["post_grad_node_1", "post_grad_node_2", ...]", ...}
 
 let jsonString = '{"triton_poi_fused_mul_0": ["mul"], "triton_poi_fused_addmm_gelu_1": ["mul_2", "mul_3", "add_tensor", "add", "erf", "mul_1"]}'
 const jsonData = JSON.parse(jsonString)

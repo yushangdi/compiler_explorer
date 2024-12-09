@@ -1,6 +1,6 @@
-// inputs.js
+/* inputs.js */
 
-    let fx_str = `
+let fx_str = `
 # post_grad_graph.txt
 class <lambda>(torch.nn.Module):
     def forward(self, arg0_1: "f32[10, 20][20, 1]cuda:0", arg1_1: "f32[20, 30][30, 1]cuda:0", arg2_1: "f32[10, 30][30, 1]cuda:0"):
@@ -32,7 +32,7 @@ class <lambda>(torch.nn.Module):
     mul_3: "f32[10, 30][30, 1]cuda:0" = torch.ops.aten.mul.Tensor(mul_1, add);  mul_1 = add = None
     return (mul_3,)
     `
-    let code_str = `
+let code_str = `
 from ctypes import c_void_p, c_long, c_int
 import torch
 import math
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     from torch._inductor.wrapper_benchmark import compiled_module_main
     compiled_module_main('None', benchmark_compiled_module)
     `
-    let cpp_code_str = `
+let cpp_code_str = `
 #include <torch/csrc/inductor/aoti_runtime/arrayref_tensor.h>
 #include <torch/csrc/inductor/aoti_runtime/interface.h>
 #include <torch/csrc/inductor/aoti_runtime/model_container.h>

@@ -1,4 +1,4 @@
-<script src="inputs.js"></script>
+<script src="inputs_model.js"></script>
 
 <script>
 </script>
@@ -90,17 +90,19 @@
 
     </div>
 
-    <script src="data.js"></script>
+    <script src="data_model.js"></script>
     <script>
 
         function computeSourceMaps(jsonData, fxGraph, generatedCode, generatedCppCode) {
             const leftToRight = [];
             const leftToMid = [];
             const midToLeft = [];
+            const rightToLeft = [];
             const fxLines = fxGraph;
             const codeLines = generatedCode;
             const cppCodeLines = generatedCppCode;
 
+            // initialize left <-> right and left <-> mid mapping
             for (let i = 0; i < fxLines.length; i++) {
                 leftToRight[i] = [];
             }
@@ -110,10 +112,11 @@
             for (let i = 0; i < codeLines.length; i++) {
                 midToLeft[i] = [];
             }
+            for (let i = 0; i < cppCodeLines.length; i++) {
+                rightToLeft[i] = [];
+            }
 
-            // parse the jsonData here
             const transformedObject = getTransformedMapping(jsonData);
-
 
             // Regular expression to match node names in fx graph lines
             const nodeNameRegex = /^\s*(\w+):/;
@@ -138,7 +141,8 @@
                         }
                         if (pushCodeIndex) {
                             leftToRight[fxIndex].push(codeIndex);
-                            if (codeLine.includes(".reset()")) {
+                            rightToLeft[codeIndex].push(fxIndex);
+                            if (codeLine.includes("launchKernel(")) {
                                 pushCodeIndex = false;
                             }
                         }
@@ -146,13 +150,13 @@
                 }
             });
 
-            return { leftToRight, midToLeft, leftToMid };
+            return { leftToRight, midToLeft, leftToMid, rightToLeft};
         }
 
         let fxGraphData = getGraph();
         let codeData = getCode();
         let cppCodeData = getCppCode();
-        let { leftToRight, midToLeft, leftToMid } = computeSourceMaps(jsonData, fxGraphData, codeData, cppCodeData);
+        let { leftToRight, midToLeft, leftToMid, rightToLeft} = computeSourceMaps(jsonData, fxGraphData, codeData, cppCodeData);
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
             const url = urlInput.value.trim();
@@ -191,9 +195,11 @@
                 leftToRight = mappings.leftToRight;
                 midToLeft = mappings.midToLeft;
                 leftToMid = mappings.leftToMid;
+                rightToLeft = mappings.rightToLeft;
                 populateEditor(fxGraph, fxGraphData, leftToRight);
                 populateEditor(generatedCode, codeData, midToLeft);
                 populateEditor(fxGraph, fxGraphData, leftToMid);
+                populateEditor(generatedCppCode, cppCodeData, rightToLeft);
             } catch (error) {
                 console.error('Error loading file:', error);
                 alert('Error loading file. Please check the URL and try again.');
@@ -302,7 +308,7 @@
         populateEditor(fxGraph, fxGraphData, leftToRight);
         populateEditor(generatedCode, codeData, midToLeft);
         populateEditor(fxGraph, fxGraphData, leftToMid);
-
+        populateEditor(generatedCppCode, cppCodeData, rightToLeft);
 
         // Modify the draggable functionality
         let isDragging = false;
@@ -335,11 +341,14 @@
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCppCode, leftToRight));
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToMid));
         generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, midToLeft));
+        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCppCode, fxGraph, rightToLeft));
+
 
         // establish a fxgraph <-> generate cpp code mapping might be feasible
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCode, leftToMid));
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCppCode, leftToRight));
         generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, fxGraph, midToLeft));
+        generatedCppCode.addEventListener('click', (event) => handleClick(event, generatedCppCode, fxGraph, rightToLeft));
 
         fxGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         fxGraph.addEventListener('mouseout', () => generatedCppCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
