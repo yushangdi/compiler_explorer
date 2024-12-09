@@ -882,10 +882,6 @@ function getCode() {
     return code_str.split('\n');
 }
 
-function escapeSpecialChars(str) {
-    return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 function getCppCode() {
-    const escaped_cpp_code_str = escapeSpecialChars(cpp_code_str);
-    return escaped_cpp_code_str.split('\n')
+    return cpp_code_str.split('\n')
 }
