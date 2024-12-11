@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Bidirectional Highlighting with Draggable Divider</title>
     <style>
-        body { 
-            display: flex; 
+        body {
+            display: flex;
             flex-direction: column;
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            height: 100vh; 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             overflow: hidden;
         }
         .url-inputs {
@@ -35,32 +35,32 @@
             flex: 1;
             overflow: hidden;
         }
-        .editor { 
-            height: 100%; 
-            overflow-y: auto; 
-            border: 1px solid #ddd; 
-            padding: 10px; 
+        .editor {
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
             box-sizing: border-box;
             flex: 1;
             font-family: monospace;
         }
-        .line { 
-            padding: 2px 5px; 
-            cursor: pointer; 
+        .line {
+            padding: 2px 5px;
+            cursor: pointer;
             white-space: nowrap;
         }
-        .highlight { 
-            background-color: yellow; 
+        .highlight {
+            background-color: yellow;
         }
         .mapped-line {
             font-weight: bold;
         }
-        .line-number { 
-            color: #888; 
-            display: inline-block; 
-            width: 30px; 
-            text-align: right; 
-            margin-right: 10px; 
+        .line-number {
+            color: #888;
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 10px;
         }
         .divider {
             width: 10px;
@@ -124,8 +124,16 @@
             <button onclick="loadFile('fxGraph')">Load FX Graph</button>
         </div>
         <div class="url-input">
+            <input type="text" id="postGradGraphUrl" placeholder="Paste FX Graph URL here">
+            <button onclick="loadFile('postGradGraph')">Load Post grad Graph</button>
+        </div>
+        <div class="url-input">
             <input type="text" id="generatedCodeUrl" placeholder="Paste Generated Code URL here">
-            <button onclick="loadFile('generatedCode')">Load Post Grad Graph</button>
+            <button onclick="loadFile('generatedCode')">Load Generated Code</button>
+        </div>
+        <div class="url-input">
+            <input type="text" id="generatedCppCodeUrl" placeholder="Paste Generated Cpp Code URL here">
+            <button onclick="loadFile('generatedCppCode')">Load Generated C++ wrapper Code</button>
         </div>
         <div class="url-input">
             <button onclick="updateUrlWithInputs()">Update URL with Inputs</button>
@@ -138,7 +146,11 @@
     <div class="editor-container">
         <div id="fxGraph" class="editor"></div>
         <div id="divider" class="divider"></div>
+        <div id="postGradGraph" class="editor"></div>
+        <div id="divider" class="divider"></div>
         <div id="generatedCode" class="editor"></div>
+        <div id="divider" class="divider"></div>
+        <div id="generatedCppCode" class="editor"></div>
     </div>
 
     <div id="jsonPopup" class="json-popup">
@@ -149,7 +161,9 @@
     <script>
         // Global variables
         let fxGraphData = null;
+        let postGradGraphData = null;
         let codeData = null;
+        let cppCodeData = null;
         let leftToRight = {};
         let rightToLeft = {};
         let jsonData = null;
@@ -157,12 +171,12 @@
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
             const url = urlInput.value.trim();
-            
+
             if (!url) {
                 alert('Please enter a valid URL');
                 return;
             }
-            
+
             try {
                 // Load file content from backend
                 const response = await fetch('/load_file', {
@@ -172,29 +186,33 @@
                     },
                     body: JSON.stringify({ url })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to load file');
                 }
-                
+
                 const data = await response.json();
                 const lines = data.lines;
-                
+
                 if (editorId === 'fxGraph') {
                     fxGraphData = lines;
-                } else {
+                } else if (editorId == 'postGraph') {
+                    postGradGraphData = lines;
+                } else if (editorId == 'codeData') {
                     codeData = lines;
+                } else {
+                    cppCodeData = lines;
                 }
-                
+
                 // Only process mapping if we have both sets of data
-                if (fxGraphData && codeData) {
-                    const mappings = await processMapping(fxGraphData, codeData);
+                if (fxGraphData && postGradGraphData) {
+                    const mappings = await processMapping(fxGraphData, postGradGraphData);
                     if (mappings) {
                         leftToRight = mappings.leftToRight;
                         rightToLeft = mappings.rightToLeft;
-                        
+
                         populateEditor(fxGraph, fxGraphData, leftToRight);
-                        populateEditor(generatedCode, codeData, rightToLeft);
+                        populateEditor(postGradGraph, postGradGraphData, rightToLeft);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
@@ -202,8 +220,8 @@
                     const mapping = editorId === 'fxGraph' ? leftToRight : rightToLeft;
                     populateEditor(editor, lines, mapping);
                 }
-                
-                if (editorId === 'generatedCode') {
+
+                if (editorId === 'postGradGraph') {
                     // Store the JSON data when loading generated code
                     const jsonLines = lines.filter(line => line.trim().startsWith('#'));
                     if (jsonLines.length > 0) {
@@ -218,7 +236,7 @@
                         }
                     }
                 }
-                
+
             } catch (error) {
                 console.error('Error loading file:', error);
                 alert('Error loading file. Please check the URL and try again.');
@@ -237,11 +255,11 @@
                         codeData
                     })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to process mapping');
                 }
-                
+
                 return await response.json();
             } catch (error) {
                 console.error('Error processing mapping:', error);
@@ -256,7 +274,7 @@
                 div.className = 'line';
                 if (mapping[index] && mapping[index].length > 0) {
                     div.classList.add('mapped-line');
-                } 
+                }
                 const lineNumber = document.createElement('span');
                 lineNumber.className = 'line-number';
                 lineNumber.textContent = index + 1;
@@ -301,7 +319,7 @@
             if (target) {
                 const lineNumber = Array.from(sourceEditor.children).indexOf(target);
                 const correspondingLines = mapping[lineNumber] || [];
-                
+
                 if (correspondingLines.length > 0) {
                     const firstCorrespondingLine = correspondingLines[0];
                     const targetLine = targetEditor.children[firstCorrespondingLine];
@@ -310,9 +328,9 @@
                         highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
                     }
                 }
-                
+
                 // Show JSON popup for generatedCode clicks when toggle is on
-                if (sourceEditor.id === 'generatedCode' && jsonData) {
+                if (sourceEditor.id === 'postGradGraph' && jsonData) {
                     if (document.getElementById('jsonPopupToggle').checked) {
                         const lineContent = target.textContent;
                         const nodeName = lineContent
@@ -339,25 +357,27 @@
 
         function updateUrlWithInputs() {
             const fxGraphUrl = document.getElementById('fxGraphUrl').value;
-            const generatedCodeUrl = document.getElementById('generatedCodeUrl').value;
-            
+            const postGradGraphCodeUrl = document.getElementById('postGradGraphCodeUrl').value;
+
             let newUrl = window.location.origin + window.location.pathname + '?';
-            
+
             if (fxGraphUrl) {
                 newUrl += 'fxGraphUrl=' + encodeURIComponent(fxGraphUrl);
             }
-            
-            if (generatedCodeUrl) {
+
+            if (postGradGraphCodeUrl) {
                 if (fxGraphUrl) newUrl += '&';
-                newUrl += 'generatedCodeUrl=' + encodeURIComponent(generatedCodeUrl);
+                newUrl += 'postGradGraphCodeUrl=' + encodeURIComponent(postGradGraphCodeUrl);
             }
-            
+
             window.history.pushState({}, '', newUrl);
         }
 
         // Initialize the application
         const fxGraph = document.getElementById('fxGraph');
+        const postGradGraph = document.getElementById('postGradGraph');
         const generatedCode = document.getElementById('generatedCode');
+        const generatedCppCode = document.getElementById('generatedCppCode');
         const divider = document.getElementById('divider');
 
         // Set up draggable divider
@@ -375,10 +395,10 @@
             const dx = e.clientX - startX;
             const newLeftWidth = startLeftWidth + dx;
             const containerWidth = document.querySelector('.editor-container').offsetWidth;
-            
+
             if (newLeftWidth > 100 && newLeftWidth < containerWidth - 100) {
                 fxGraph.style.width = `${newLeftWidth}px`;
-                generatedCode.style.width = `${containerWidth - newLeftWidth - divider.offsetWidth}px`;
+                postGradGraph.style.width = `${containerWidth - newLeftWidth - divider.offsetWidth}px`;
             }
         });
 
@@ -387,28 +407,38 @@
         });
 
         // Set up event listeners for highlighting and scrolling
-        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToRight));
-        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, rightToLeft));
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, leftToRight));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, rightToLeft));
 
-        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCode, leftToRight));
-        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, fxGraph, rightToLeft));
+        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, leftToRight));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, rightToLeft));
 
-        fxGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-        generatedCode.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
 
         // Load from URL parameters if present
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const fxGraphUrl = urlParams.get('fxGraphUrl');
+            const postGradGraphUrl = urlParams.get('postGradGraphUrl');
             const generatedCodeUrl = urlParams.get('generatedCodeUrl');
-            
+            const generatedCppCodeUrl = urlParams.get('generatedCppCodeUrl');
+
             if (fxGraphUrl) {
                 document.getElementById('fxGraphUrl').value = fxGraphUrl;
                 loadFile('fxGraph');
             }
+            if (postGradGraphUrl) {
+                document.getElementById('postGradGraphUrl').value = postGradGraphUrl;
+                loadFile('postGradGraph');
+            }
             if (generatedCodeUrl) {
                 document.getElementById('generatedCodeUrl').value = generatedCodeUrl;
                 loadFile('generatedCode');
+            }
+            if (generatedCppCodeUrl) {
+                document.getElementById('generatedCppCodeUrl').value = generatedCppCodeUrl;
+                loadFile('generatedCppCode');
             }
         };
 
@@ -426,23 +456,23 @@
         function showJsonPopup(content, event) {
             const popup = document.getElementById('jsonPopup');
             const jsonContent = document.getElementById('jsonContent');
-            
+
             // Format the JSON nicely
             const formattedJson = JSON.stringify(content, null, 2);
             jsonContent.textContent = formattedJson;
-            
+
             // Position the popup near the click
             popup.style.left = `${event.pageX + 10}px`;
             popup.style.top = `${event.pageY + 10}px`;
-            
+
             // Show the popup
             popup.style.display = 'block';
-            
+
             // Adjust position if popup goes off screen
             const rect = popup.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
-            
+
             if (rect.right > viewportWidth) {
                 popup.style.left = `${event.pageX - rect.width - 10}px`;
             }
