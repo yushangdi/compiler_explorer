@@ -345,7 +345,7 @@
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCppCode, leftToRight));
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToMid));
         generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, midToLeft));
-        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCppCode, fxGraph, rightToLeft));
+        generatedCppCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCppCode, fxGraph, rightToLeft));
 
 
         // establish a fxgraph <-> generate cpp code mapping might be feasible
