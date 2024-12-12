@@ -196,7 +196,7 @@
 
                 if (editorId === 'fxGraph') {
                     fxGraphData = lines;
-                } else if (editorId == 'postGraph') {
+                } else if (editorId == 'postGradGraph') {
                     postGradGraphData = lines;
                 } else if (editorId == 'codeData') {
                     codeData = lines;
@@ -243,7 +243,7 @@
             }
         }
 
-        async function processMapping(fxGraphData, codeData) {
+        async function processMapping(fxGraphData, postGradGraphData) {
             try {
                 const response = await fetch('/process_mapping', {
                     method: 'POST',
@@ -252,7 +252,7 @@
                     },
                     body: JSON.stringify({
                         fxGraphData,
-                        codeData
+                        postGradGraphData
                     })
                 });
 
@@ -447,7 +447,7 @@
             const containerWidth = document.querySelector('.editor-container').offsetWidth;
             const editorWidth = (containerWidth - divider.offsetWidth) / 2;
             fxGraph.style.width = `${editorWidth}px`;
-            generatedCode.style.width = `${editorWidth}px`;
+            postGradGraph.style.width = `${editorWidth}px`;
         }
 
         window.addEventListener('load', setInitialEditorWidths);
