@@ -58,6 +58,25 @@ def fetch_content_from_url(path_or_url):
         print(f"Unexpected error: {e}")
         raise
 
+# Read a local JSON file
+def read_local_json_file(file_path):
+    """Read a local JSON file and return its content"""
+    # Check if it's a local file path
+    if (
+        os.path.exists(file_path)
+        or file_path.startswith("./")
+        or file_path.startswith("/")
+    ):
+        print(f"Reading local JSON file: {file_path}")
+        try:
+            with open(file_path, 'r') as f:
+                content = json.load(f)
+                if content is not None:
+                   print(f"Successfully loaded JSON content: {content}")
+            return content
+        except Exception as e:
+            print(f"Error reading local JSON file: {e}")
+            return None
 
 def extract_graph_id(fx_graph_lines):
     # Get the last non-empty line
@@ -202,6 +221,13 @@ def process_mapping():
         data = request.json
         fx_graph_lines = data["fxGraphData"]
         post_grad_graph_lines = data["postGradGraphData"]
+
+        # Read the local inductor triton kernel to post grad nodes mapping
+        file_path = 'tl_out/inductor_triton_kernel_to_post_grad_nodes.json'
+        kernel_post_grad_mapping = read_local_json_file(file_path)
+        if not kernel_post_grad_mapping:
+            logger.error(traceback.format_exc())
+            return jsonify({"error": "Could not read kernel_post_grad_mapping"}), 400
 
         # Extract graph ID
         fx_graph_id = extract_graph_id(fx_graph_lines)
