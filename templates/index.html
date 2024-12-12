@@ -164,8 +164,8 @@
         let postGradGraphData = null;
         let codeData = null;
         let cppCodeData = null;
-        let leftToRight = {};
-        let rightToLeft = {};
+        let preToPost = {};
+        let postToPre = {};
         let jsonData = null;
 
         async function loadFile(editorId) {
@@ -208,16 +208,15 @@
                 if (fxGraphData && postGradGraphData) {
                     const mappings = await processMapping(fxGraphData, postGradGraphData);
                     if (mappings) {
-                        leftToRight = mappings.leftToRight;
-                        rightToLeft = mappings.rightToLeft;
-
-                        populateEditor(fxGraph, fxGraphData, leftToRight);
-                        populateEditor(postGradGraph, postGradGraphData, rightToLeft);
+                        preToPost = mappings.preToPost;
+                        postToPre = mappings.postToPre;
+                        populateEditor(fxGraph, fxGraphData, preToPost);
+                        populateEditor(postGradGraph, postGradGraphData, postToPre);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
                     const editor = document.getElementById(editorId);
-                    const mapping = editorId === 'fxGraph' ? leftToRight : rightToLeft;
+                    const mapping = editorId === 'fxGraph' ? preToPost : postToPre;
                     populateEditor(editor, lines, mapping);
                 }
 
@@ -407,11 +406,11 @@
         });
 
         // Set up event listeners for highlighting and scrolling
-        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, leftToRight));
-        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, rightToLeft));
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, preToPost));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, postToPre));
 
-        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, leftToRight));
-        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, rightToLeft));
+        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, preToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, postToPre));
 
         fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));

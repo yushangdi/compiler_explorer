@@ -58,7 +58,7 @@ def fetch_content_from_url(path_or_url):
         print(f"Unexpected error: {e}")
         raise
 
-# Read a local JSON file
+
 def read_local_json_file(file_path):
     """Read a local JSON file and return its content"""
     # Check if it's a local file path
@@ -78,6 +78,7 @@ def read_local_json_file(file_path):
             print(f"Error reading local JSON file: {e}")
             return None
 
+
 def extract_graph_id(fx_graph_lines):
     # Get the last non-empty line
     last_line = next((line for line in reversed(fx_graph_lines) if line.strip()), None)
@@ -92,30 +93,30 @@ def extract_graph_id(fx_graph_lines):
 
 
 def create_node_mapping(json_data, fx_graph_id):
-    """Create bidirectional mappings between FX graph nodes and generated code nodes"""
+    """Create bidirectional mappings between pre_grad graph nodes and post_grad graph code nodes"""
     try:
-        left_to_right = defaultdict(set)
-        right_to_left = defaultdict(set)
+        pre_to_post = defaultdict(set)
+        post_to_pre = defaultdict(set)
 
         for outer_key, node_array in json_data.items():
             for node in node_array:
                 # Check the current node first
                 if node.get("graph_id") == fx_graph_id:
-                    left_to_right[node["node_name"]].add(outer_key)
-                    right_to_left[outer_key].add(node["node_name"])
+                    pre_to_post[node["node_name"]].add(outer_key)
+                    post_to_pre[outer_key].add(node["node_name"])
 
                 # Check nested from_node array recursively
                 stack = [(n, outer_key) for n in node.get("from_node", [])]
                 while stack:
                     current_node, parent_key = stack.pop()
                     if current_node.get("graph_id") == fx_graph_id:
-                        left_to_right[current_node["node_name"]].add(parent_key)
-                        right_to_left[parent_key].add(current_node["node_name"])
+                        pre_to_post[current_node["node_name"]].add(parent_key)
+                        post_to_pre[parent_key].add(current_node["node_name"])
                     stack.extend(
                         (n, parent_key) for n in current_node.get("from_node", [])
                     )
 
-        return {"leftToRight": left_to_right, "rightToLeft": right_to_left}
+        return {"preToPost": pre_to_post, "postToPre": post_to_pre}
 
     except AttributeError as e:
         logger.error(f"AttributeError in create_node_mapping: {str(e)}")
@@ -163,32 +164,32 @@ def convert_node_mappings_to_line_numbers(node_mappings, fx_graph_lines, code_li
             if node_name:
                 code_node_to_lines[node_name] = i
 
-    line_left_to_right = {}
-    line_right_to_left = {}
+    line_pre_to_post = {}
+    line_post_to_pre = {}
 
-    # Process leftToRight using lookup maps
-    for fx_node_name, gen_code_nodes in node_mappings["leftToRight"].items():
+    # Process preToPost using lookup maps
+    for fx_node_name, gen_code_nodes in node_mappings["preToPost"].items():
         if fx_node_name in fx_node_to_lines:
             fx_line_num = fx_node_to_lines[fx_node_name]
-            line_left_to_right[fx_line_num] = []
+            line_pre_to_post[fx_line_num] = []
             for gen_node_name in gen_code_nodes:
                 if gen_node_name in code_node_to_lines:
-                    line_left_to_right[fx_line_num].append(
+                    line_pre_to_post[fx_line_num].append(
                         code_node_to_lines[gen_node_name]
                     )
 
-    # Process rightToLeft using lookup maps
-    for gen_node_name, fx_node_names in node_mappings["rightToLeft"].items():
+    # Process postToPre using lookup maps
+    for gen_node_name, fx_node_names in node_mappings["postToPre"].items():
         if gen_node_name in code_node_to_lines:
             gen_line_num = code_node_to_lines[gen_node_name]
-            line_right_to_left[gen_line_num] = []
+            line_post_to_pre[gen_line_num] = []
             for fx_node_name in fx_node_names:
                 if fx_node_name in fx_node_to_lines:
-                    line_right_to_left[gen_line_num].append(
+                    line_post_to_pre[gen_line_num].append(
                         fx_node_to_lines[fx_node_name]
                     )
 
-    return {"leftToRight": line_left_to_right, "rightToLeft": line_right_to_left}
+    return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre}
 
 
 @app.route("/")
