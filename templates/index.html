@@ -222,24 +222,24 @@
                 }
 
                 // Only process mapping if we have both sets of data
-                // if (fxGraphData && postGradGraphData && codeData) {
-                //     const mappings = await processMapping(fxGraphData, postGradGraphData, codeData);
-                //     if (mappings) {
-                //         preToPost = mappings.preToPost;
-                //         postToPre = mappings.postToPre;
-                //         pyCodeToPost = mappings.pyCodeToPost;
-                //         populateEditor(fxGraph, fxGraphData, preToPost);
-                //         populateEditor(postGradGraph, postGradGraphData, postToPre);
-                //         populateEditor(generatedCode, codeData, null);
-                //     }
-                // } else {
+                if (fxGraphData && postGradGraphData && codeData) {
+                    const mappings = await processMapping(fxGraphData, postGradGraphData, codeData);
+                    if (mappings) {
+                        preToPost = mappings.preToPost;
+                        postToPre = mappings.postToPre;
+                        pyCodeToPost = mappings.pyCodeToPost;
+                        populateEditor(fxGraph, fxGraphData, preToPost);
+                        populateEditor(postGradGraph, postGradGraphData, postToPre);
+                        populateEditor(generatedCode, codeData, pyCodeToPost);
+                    }
+                } else {
                     // If we only have one set of data, just populate that editor
-                const editor = document.getElementById(editorId);
-                const mapping = editorId === 'fxGraph' ? preToPost :
-                    editorId === 'postGradGraph' ? postToPre :
-                        editorId === 'generatedCode' ? pyCodeToPost : null;
-                populateEditor(editor, lines, mapping);
-                // }
+                    const editor = document.getElementById(editorId);
+                    const mapping = editorId === 'fxGraph' ? preToPost :
+                        editorId === 'postGradGraph' ? postToPre :
+                            editorId === 'generatedCode' ? pyCodeToPost : null;
+                    populateEditor(editor, lines, mapping);
+                }
 
                 if (editorId === 'postGradGraph') {
                     // Store the JSON data when loading generated code
@@ -431,15 +431,17 @@
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, preToPost));
         postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, postToPre));
         generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, postGradGraph, pyCodeToPost));
+        // postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCode, postToPyCode));
+
 
 
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, preToPost));
         postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, postToPre));
-        // generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, postGradGraph, pyCodeToPost));
+        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, postGradGraph, pyCodeToPost));
 
         fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-        //generatedCode.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCode.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
 
 
         // Load from URL parameters if present
