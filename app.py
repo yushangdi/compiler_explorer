@@ -99,15 +99,14 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
         pre_to_post = defaultdict(set)
         post_to_pre = defaultdict(set)
 
-        # post_to_py_code = defaultdict(set)
+        post_to_py_code = defaultdict(set)
         py_code_to_post = defaultdict(set)
         print("Creating node mappings")
 
-        # {'triton_kernel_name': ['post_node_name1', 'post_node_name2', ...]}
+        # json_data_2 = {'triton_kernel_name': ['post_node_name1', 'post_node_name2', ...]}
         for outer_key, node_array in json_data_2.items():  
             for curr_node in node_array:
-                # for curr_node -> outer_key: triton kernel name
-                # post_to_py_code[curr_node].add(outer_key)
+                post_to_py_code[curr_node].add(outer_key)
                 py_code_to_post[outer_key].add(curr_node)
 
         for outer_key, node_array in json_data.items():
@@ -128,9 +127,9 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
                         (n, parent_key) for n in current_node.get("from_node", [])
                     )
 
-        print("Finished creating node mappings")
-       #print("pyCodeToPost: ", py_code_to_post)
-        return {"preToPost": pre_to_post, "postToPre": post_to_pre, "pyCodeToPost": py_code_to_post}
+        print("Finished creating node mappings")\
+
+        return {"preToPost": pre_to_post, "postToPre": post_to_pre, "pyCodeToPost": py_code_to_post, "postToPyCode": post_to_py_code}
 
     except AttributeError as e:
         logger.error(f"AttributeError in create_node_mapping: {str(e)}")
@@ -168,14 +167,14 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
     post_grad_node_to_lines = {}
     py_kernel_to_lines = {}
 
-    # Build FX graph lookup map
+    # Build pre_grad graph lookup map
     for i, line in enumerate(pre_grad_graph_lines):
         if valid_line(line):
             node_name = line.strip().split("=", 1)[0].split(":", 1)[0].strip()
             if node_name:
                 pre_grad_node_to_lines[node_name] = i
 
-    # Build code lookup map
+    # Build post_grad lookup map
     for i, line in enumerate(post_grad_graph_lines):
         if valid_line(line):
             node_name = line.strip().split("=", 1)[0].split(":", 1)[0].strip()
@@ -192,6 +191,7 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
     line_pre_to_post = {}
     line_post_to_pre = {}
     line_py_code_to_post = {}
+    line_post_to_py_code = {}
 
     # Process preToPost using lookup maps
     for fx_node_name, gen_code_nodes in node_mappings["preToPost"].items():
@@ -215,7 +215,6 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
                         pre_grad_node_to_lines[fx_node_name]
                     )
     
-    # print("node_mappings[pyCodeToPost]:", node_mappings["pyCodeToPost"])
     # Process pyCodeToPost using lookup maps
     for py_kernel_name, post_grad_node_names in node_mappings["pyCodeToPost"].items():
         if py_kernel_name in py_kernel_to_lines:
@@ -227,9 +226,18 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
                         post_grad_node_to_lines[post_grad_node_name]
                     )
     
-    print("line_py_code_to_post: ", line_py_code_to_post)
+    # Process postToPyCode using lookup maps
+    for post_grad_node, py_kernel_names in node_mappings["postToPyCode"].items():
+        if post_grad_node in post_grad_node_to_lines:
+            gen_line_num = post_grad_node_to_lines[post_grad_node]
+            line_post_to_py_code[gen_line_num] = []
+            for py_kernel_name in py_kernel_names:
+                if py_kernel_name in py_kernel_to_lines:
+                    line_post_to_py_code[gen_line_num].append(
+                        py_kernel_to_lines[py_kernel_name]
+                    )
 
-    return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre, "pyCodeToPost": line_py_code_to_post}
+    return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre, "pyCodeToPost": line_py_code_to_post, "postToPyCode": line_post_to_py_code}
 
 
 @app.route("/")
@@ -263,7 +271,6 @@ def process_mapping():
         fx_graph_lines = data["fxGraphData"]
         post_grad_graph_lines = data["postGradGraphData"]
         python_code_lines = data["codeData"]
-        print("process_mapping: Received data", len(python_code_lines))
 
         # Read the local inductor triton kernel to post grad nodes mapping
         file_path = 'tl_out/inductor_triton_kernel_to_post_grad_nodes.json'

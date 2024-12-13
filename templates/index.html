@@ -228,9 +228,11 @@
                         preToPost = mappings.preToPost;
                         postToPre = mappings.postToPre;
                         pyCodeToPost = mappings.pyCodeToPost;
+                        postToPyCode = mappings.postToPyCode;
                         populateEditor(fxGraph, fxGraphData, preToPost);
                         populateEditor(postGradGraph, postGradGraphData, postToPre);
                         populateEditor(generatedCode, codeData, pyCodeToPost);
+                        populateEditor(postGradGraph, postGradGraphData, postToPyCode);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
@@ -431,17 +433,20 @@
         fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, preToPost));
         postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, postToPre));
         generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, postGradGraph, pyCodeToPost));
-        // postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCode, postToPyCode));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCode, postToPyCode));
 
 
 
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, preToPost));
         postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, postToPre));
         generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, postGradGraph, pyCodeToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, generatedCode, postToPyCode));
 
         fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-        generatedCode.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCode.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+
 
 
         // Load from URL parameters if present
