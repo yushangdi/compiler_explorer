@@ -100,6 +100,10 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
 
         post_to_py_code = defaultdict(set)
         py_code_to_post = defaultdict(set)
+
+        post_to_cpp_code = defaultdict(set)
+        cpp_code_to_post = defaultdict(set)
+
         print("Creating node mappings")
 
         # json_data_2 = {'triton_kernel_name': ['post_node_name1', 'post_node_name2', ...]}
@@ -107,6 +111,11 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
             for curr_node in node_array:
                 post_to_py_code[curr_node].add(outer_key)
                 py_code_to_post[outer_key].add(curr_node)
+
+        for outer_key, node_array in json_data_2.items():  
+            for curr_node in node_array:
+                post_to_cpp_code[curr_node].add(outer_key)
+                cpp_code_to_post[outer_key].add(curr_node)
 
         for outer_key, node_array in json_data.items():
             for node in node_array:
@@ -126,9 +135,9 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
                         (n, parent_key) for n in current_node.get("from_node", [])
                     )
 
-        print("Finished creating node mappings")\
+        print("Finished creating node mappings")
 
-        return {"preToPost": pre_to_post, "postToPre": post_to_pre, "pyCodeToPost": py_code_to_post, "postToPyCode": post_to_py_code}
+        return {"preToPost": pre_to_post, "postToPre": post_to_pre, "pyCodeToPost": py_code_to_post, "postToPyCode": post_to_py_code, "cppCodeToPost": cpp_code_to_post, "postToCppCode": post_to_cpp_code}
 
     except AttributeError as e:
         logger.error(f"AttributeError in create_node_mapping: {str(e)}")
@@ -156,6 +165,7 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
 
 
 def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, post_grad_graph_lines, py_code_lines, cpp_code_lines):
+    import re
 
     def valid_line(line):
         stripped = line.strip()
@@ -165,6 +175,7 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
     pre_grad_node_to_lines = {}
     post_grad_node_to_lines = {}
     py_kernel_to_lines = {}
+    cpp_code_to_lines = {}
 
     # Build pre_grad graph lookup map
     for i, line in enumerate(pre_grad_graph_lines):
@@ -187,10 +198,30 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
             if kernel_name:
                 py_kernel_to_lines[kernel_name] = i
 
+    # Build generated cpp wrapper code lookup map
+    for i, line in enumerate(cpp_code_lines):
+        if valid_line(line) and '== nullptr' in line and 'kernels.' in line:
+            match = re.search(r'kernels\.(\w+)', line)
+            kernel_name = match.group(1) if match else None
+            if kernel_name:
+                cpp_code_to_lines[kernel_name] = []
+                cpp_code_to_lines[kernel_name].append(i)
+                
+                j = i + 1
+                while j < len(cpp_code_lines):
+                    cpp_code_to_lines[kernel_name].append(j)
+                    if 'launchKernel(' in cpp_code_lines[j]:
+                        if j + 1 < len(cpp_code_lines):
+                            cpp_code_to_lines[kernel_name].append(j + 1)
+                        break
+                    j += 1
+    
     line_pre_to_post = {}
     line_post_to_pre = {}
     line_py_code_to_post = {}
     line_post_to_py_code = {}
+    line_cpp_code_to_post = {}
+    line_post_to_cpp_code = {}
 
     # Process preToPost using lookup maps
     for fx_node_name, gen_code_nodes in node_mappings["preToPost"].items():
@@ -235,8 +266,34 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
                     line_post_to_py_code[gen_line_num].append(
                         py_kernel_to_lines[py_kernel_name]
                     )
+    
+    # Process cppCodeToPost using lookup maps
+    for cpp_code_kernel_name, post_grad_node_names in node_mappings["cppCodeToPost"].items():
+        if cpp_code_kernel_name in cpp_code_to_lines:
+            gen_line_nums = cpp_code_to_lines[cpp_code_kernel_name]
+            for gen_line_num in gen_line_nums:
+                if gen_line_num not in line_cpp_code_to_post:
+                    line_cpp_code_to_post[gen_line_num] = []
+                
+                for post_grad_node_name in post_grad_node_names:
+                    if post_grad_node_name in post_grad_node_to_lines:
+                        line_cpp_code_to_post[gen_line_num].append(
+                            post_grad_node_to_lines[post_grad_node_name]
+                        )
+    
+    # Process postToCppCode using lookup maps
+    for post_grad_node, cpp_code_kernel_names in node_mappings["postToCppCode"].items():
+        if post_grad_node in post_grad_node_to_lines:
+            gen_line_num = post_grad_node_to_lines[post_grad_node]
+            line_post_to_cpp_code[gen_line_num] = []
+            for cpp_code_kernel_name in cpp_code_kernel_names:
+                if cpp_code_kernel_name in cpp_code_to_lines:
+                    line_post_to_cpp_code[gen_line_num].extend(
+                        cpp_code_to_lines[cpp_code_kernel_name]
+                    )
 
-    return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre, "pyCodeToPost": line_py_code_to_post, "postToPyCode": line_post_to_py_code}
+    return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre, "pyCodeToPost": line_py_code_to_post, "postToPyCode": line_post_to_py_code,
+            "cppCodeToPost": line_cpp_code_to_post, "postToCppCode": line_post_to_cpp_code}
 
 
 @app.route("/")
@@ -299,7 +356,6 @@ def process_mapping():
 
         # Create mappings from pre_grad graph nodes to post_grad graph code nodes
         node_mappings = create_node_mapping(json_data, fx_graph_id, kernel_post_grad_mapping_json)
-        print("process_mapping: Node mappings created")
 
         line_mappings = convert_node_mappings_to_line_numbers(
             node_mappings, fx_graph_lines, post_grad_graph_lines, 

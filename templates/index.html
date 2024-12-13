@@ -232,8 +232,8 @@
                         postToPre = mappings.postToPre;
                         pyCodeToPost = mappings.pyCodeToPost;
                         postToPyCode = mappings.postToPyCode;
-                        // cppCodeToPost = mappings.cppCodeToPost;
-                        // postToCppCode = mappings.postToCppCode;
+                        cppCodeToPost = mappings.cppCodeToPost;
+                        postToCppCode = mappings.postToCppCode;
                         populateEditor(fxGraph, fxGraphData, preToPost);
                         populateEditor(postGradGraph, postGradGraphData, postToPre);
                         populateEditor(generatedCode, codeData, pyCodeToPost);
@@ -389,6 +389,8 @@
         function updateUrlWithInputs() {
             const fxGraphUrl = document.getElementById('fxGraphUrl').value;
             const postGradGraphCodeUrl = document.getElementById('postGradGraphCodeUrl').value;
+            const generatedCodeUrl = document.getElementById('generatedCodeUrl').value;
+            const generatedCppCodeUrl = document.getElementById('generatedCppCodeUrl').value;
 
             let newUrl = window.location.origin + window.location.pathname + '?';
 
