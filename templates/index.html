@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Bidirectional Highlighting with Draggable Divider</title>
     <style>
-        body { 
-            display: flex; 
+        body {
+            display: flex;
             flex-direction: column;
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            height: 100vh; 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             overflow: hidden;
         }
+
         .url-inputs {
             display: flex;
             padding: 10px;
             background-color: #f0f0f0;
         }
+
         .url-input {
             flex: 1;
             margin-right: 10px;
@@ -26,58 +29,68 @@
             align-items: center;
             gap: 10px;
         }
+
         .url-input input {
             width: 100%;
             padding: 5px;
         }
+
         .editor-container {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
-        .editor { 
-            height: 100%; 
-            overflow-y: auto; 
-            border: 1px solid #ddd; 
-            padding: 10px; 
+
+        .editor {
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
             box-sizing: border-box;
             flex: 1;
             font-family: monospace;
         }
-        .line { 
-            padding: 2px 5px; 
-            cursor: pointer; 
+
+        .line {
+            padding: 2px 5px;
+            cursor: pointer;
             white-space: nowrap;
         }
-        .highlight { 
-            background-color: yellow; 
+
+        .highlight {
+            background-color: yellow;
         }
+
         .mapped-line {
             font-weight: bold;
         }
-        .line-number { 
-            color: #888; 
-            display: inline-block; 
-            width: 30px; 
-            text-align: right; 
-            margin-right: 10px; 
+
+        .line-number {
+            color: #888;
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 10px;
         }
+
         .divider {
             width: 10px;
             background-color: #ccc;
             cursor: col-resize;
         }
+
         .line-content {
             white-space: pre;
             display: inline;
         }
+
         .json-popup {
             display: none;
             position: fixed;
             background: white;
             border: 1px solid #ccc;
             padding: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             max-width: 400px;
             max-height: 300px;
             overflow: auto;
@@ -117,6 +130,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="url-inputs">
         <div class="url-input">
@@ -124,8 +138,16 @@
             <button onclick="loadFile('fxGraph')">Load FX Graph</button>
         </div>
         <div class="url-input">
+            <input type="text" id="postGradGraphUrl" placeholder="Paste FX Graph URL here">
+            <button onclick="loadFile('postGradGraph')">Load Post grad Graph</button>
+        </div>
+        <div class="url-input">
             <input type="text" id="generatedCodeUrl" placeholder="Paste Generated Code URL here">
-            <button onclick="loadFile('generatedCode')">Load Post Grad Graph</button>
+            <button onclick="loadFile('generatedCode')">Load Generated Code</button>
+        </div>
+        <div class="url-input">
+            <input type="text" id="generatedCppCodeUrl" placeholder="Paste Generated Cpp Code URL here">
+            <button onclick="loadFile('generatedCppCode')">Load Generated C++ wrapper Code</button>
         </div>
         <div class="url-input">
             <button onclick="updateUrlWithInputs()">Update URL with Inputs</button>
@@ -138,7 +160,11 @@
     <div class="editor-container">
         <div id="fxGraph" class="editor"></div>
         <div id="divider" class="divider"></div>
+        <div id="postGradGraph" class="editor"></div>
+        <div id="divider" class="divider"></div>
         <div id="generatedCode" class="editor"></div>
+        <div id="divider" class="divider"></div>
+        <div id="generatedCppCode" class="editor"></div>
     </div>
 
     <div id="jsonPopup" class="json-popup">
@@ -149,20 +175,28 @@
     <script>
         // Global variables
         let fxGraphData = null;
+        let postGradGraphData = null;
         let codeData = null;
-        let leftToRight = {};
-        let rightToLeft = {};
+        let cppCodeData = null;
+
+        let preToPost = {};
+        let postToPre = {};
+        let pyCodeToPost = {};
+        let postToPyCode = {};
+        let postToCppCode = {};
+        let cppCodeToPost = {};
+
         let jsonData = null;
 
         async function loadFile(editorId) {
             const urlInput = document.getElementById(`${editorId}Url`);
             const url = urlInput.value.trim();
-            
+
             if (!url) {
                 alert('Please enter a valid URL');
                 return;
             }
-            
+
             try {
                 // Load file content from backend
                 const response = await fetch('/load_file', {
@@ -172,38 +206,49 @@
                     },
                     body: JSON.stringify({ url })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to load file');
                 }
-                
+
                 const data = await response.json();
                 const lines = data.lines;
-                
+
                 if (editorId === 'fxGraph') {
                     fxGraphData = lines;
-                } else {
+                } else if (editorId == 'postGradGraph') {
+                    postGradGraphData = lines;
+                } else if (editorId == 'generatedCode') {
                     codeData = lines;
+                } else {
+                    cppCodeData = lines;
                 }
-                
+
                 // Only process mapping if we have both sets of data
-                if (fxGraphData && codeData) {
-                    const mappings = await processMapping(fxGraphData, codeData);
+                if (fxGraphData && postGradGraphData && codeData && cppCodeData) {
+                    const mappings = await processMapping(fxGraphData, postGradGraphData, codeData, cppCodeData);
                     if (mappings) {
-                        leftToRight = mappings.leftToRight;
-                        rightToLeft = mappings.rightToLeft;
-                        
-                        populateEditor(fxGraph, fxGraphData, leftToRight);
-                        populateEditor(generatedCode, codeData, rightToLeft);
+                        preToPost = mappings.preToPost;
+                        postToPre = mappings.postToPre;
+                        pyCodeToPost = mappings.pyCodeToPost;
+                        postToPyCode = mappings.postToPyCode;
+                        cppCodeToPost = mappings.cppCodeToPost;
+                        postToCppCode = mappings.postToCppCode;
+                        populateEditor(fxGraph, fxGraphData, preToPost);
+                        populateEditor(postGradGraph, postGradGraphData, postToPre);
+                        populateEditor(generatedCode, codeData, pyCodeToPost);
+                        populateEditor(generatedCppCode, cppCodeData, cppCodeToPost);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
                     const editor = document.getElementById(editorId);
-                    const mapping = editorId === 'fxGraph' ? leftToRight : rightToLeft;
+                    const mapping = editorId === 'fxGraph' ? preToPost :
+                        editorId === 'postGradGraph' ? postToPre :
+                            editorId === 'generatedCode' ? pyCodeToPost : cppCodeToPost;
                     populateEditor(editor, lines, mapping);
                 }
-                
-                if (editorId === 'generatedCode') {
+
+                if (editorId === 'postGradGraph') {
                     // Store the JSON data when loading generated code
                     const jsonLines = lines.filter(line => line.trim().startsWith('#'));
                     if (jsonLines.length > 0) {
@@ -218,14 +263,14 @@
                         }
                     }
                 }
-                
+
             } catch (error) {
                 console.error('Error loading file:', error);
                 alert('Error loading file. Please check the URL and try again.');
             }
         }
 
-        async function processMapping(fxGraphData, codeData) {
+        async function processMapping(fxGraphData, postGradGraphData, codeData, cppCodeData) {
             try {
                 const response = await fetch('/process_mapping', {
                     method: 'POST',
@@ -234,14 +279,16 @@
                     },
                     body: JSON.stringify({
                         fxGraphData,
-                        codeData
+                        postGradGraphData,
+                        codeData,
+                        cppCodeData
                     })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to process mapping');
                 }
-                
+
                 return await response.json();
             } catch (error) {
                 console.error('Error processing mapping:', error);
@@ -256,7 +303,7 @@
                 div.className = 'line';
                 if (mapping[index] && mapping[index].length > 0) {
                     div.classList.add('mapped-line');
-                } 
+                }
                 const lineNumber = document.createElement('span');
                 lineNumber.className = 'line-number';
                 lineNumber.textContent = index + 1;
@@ -275,7 +322,7 @@
             sourceEditor.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
             targetEditor.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
             // highlight source editor
-            if(sourceEditor.children[lineNumber]){
+            if (sourceEditor.children[lineNumber]) {
                 sourceEditor.children[lineNumber].classList.add('highlight');
             }
             // highlight target editor
@@ -301,7 +348,7 @@
             if (target) {
                 const lineNumber = Array.from(sourceEditor.children).indexOf(target);
                 const correspondingLines = mapping[lineNumber] || [];
-                
+
                 if (correspondingLines.length > 0) {
                     const firstCorrespondingLine = correspondingLines[0];
                     const targetLine = targetEditor.children[firstCorrespondingLine];
@@ -310,9 +357,9 @@
                         highlightLines(sourceEditor, targetEditor, mapping, lineNumber);
                     }
                 }
-                
+
                 // Show JSON popup for generatedCode clicks when toggle is on
-                if (sourceEditor.id === 'generatedCode' && jsonData) {
+                if (sourceEditor.id === 'postGradGraph' && jsonData) {
                     if (document.getElementById('jsonPopupToggle').checked) {
                         const lineContent = target.textContent;
                         const nodeName = lineContent
@@ -339,25 +386,39 @@
 
         function updateUrlWithInputs() {
             const fxGraphUrl = document.getElementById('fxGraphUrl').value;
+            const postGradGraphCodeUrl = document.getElementById('postGradGraphCodeUrl').value;
             const generatedCodeUrl = document.getElementById('generatedCodeUrl').value;
-            
+            const generatedCppCodeUrl = document.getElementById('generatedCppCodeUrl').value;
+
             let newUrl = window.location.origin + window.location.pathname + '?';
-            
+
             if (fxGraphUrl) {
                 newUrl += 'fxGraphUrl=' + encodeURIComponent(fxGraphUrl);
             }
-            
+
+            if (postGradGraphCodeUrl) {
+                if (fxGraphUrl) newUrl += '&';
+                newUrl += 'postGradGraphCodeUrl=' + encodeURIComponent(postGradGraphCodeUrl);
+            }
+
             if (generatedCodeUrl) {
                 if (fxGraphUrl) newUrl += '&';
                 newUrl += 'generatedCodeUrl=' + encodeURIComponent(generatedCodeUrl);
             }
-            
+
+            if (generatedCppCodeUrl) {
+                if (fxGraphUrl) newUrl += '&';
+                newUrl += 'generatedCppCodeUrl=' + encodeURIComponent(generatedCppCodeUrl);
+            }
+
             window.history.pushState({}, '', newUrl);
         }
 
         // Initialize the application
         const fxGraph = document.getElementById('fxGraph');
+        const postGradGraph = document.getElementById('postGradGraph');
         const generatedCode = document.getElementById('generatedCode');
+        const generatedCppCode = document.getElementById('generatedCppCode');
         const divider = document.getElementById('divider');
 
         // Set up draggable divider
@@ -375,10 +436,10 @@
             const dx = e.clientX - startX;
             const newLeftWidth = startLeftWidth + dx;
             const containerWidth = document.querySelector('.editor-container').offsetWidth;
-            
+
             if (newLeftWidth > 100 && newLeftWidth < containerWidth - 100) {
                 fxGraph.style.width = `${newLeftWidth}px`;
-                generatedCode.style.width = `${containerWidth - newLeftWidth - divider.offsetWidth}px`;
+                postGradGraph.style.width = `${containerWidth - newLeftWidth - divider.offsetWidth}px`;
             }
         });
 
@@ -387,28 +448,51 @@
         });
 
         // Set up event listeners for highlighting and scrolling
-        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, generatedCode, leftToRight));
-        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, fxGraph, rightToLeft));
+        fxGraph.addEventListener('mousemove', (event) => handleMouseMove(event, fxGraph, postGradGraph, preToPost));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, postToPre));
+        generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, postGradGraph, pyCodeToPost));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCode, postToPyCode));
+        generatedCppCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCppCode, postGradGraph, cppCodeToPost));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCppCode, postToCppCode));
 
-        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, generatedCode, leftToRight));
-        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, fxGraph, rightToLeft));
+        fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, preToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, postToPre));
+        generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, postGradGraph, pyCodeToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, generatedCode, postToPyCode));
+        generatedCppCode.addEventListener('click', (event) => handleClick(event, generatedCppCode, postGradGraph, cppCodeToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, generatedCppCode, postToCppCode));
 
-        fxGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-        generatedCode.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCode.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        generatedCppCode.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => generatedCppCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+
 
         // Load from URL parameters if present
-        window.onload = function() {
+        window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
             const fxGraphUrl = urlParams.get('fxGraphUrl');
+            const postGradGraphUrl = urlParams.get('postGradGraphUrl');
             const generatedCodeUrl = urlParams.get('generatedCodeUrl');
-            
+            const generatedCppCodeUrl = urlParams.get('generatedCppCodeUrl');
+
             if (fxGraphUrl) {
                 document.getElementById('fxGraphUrl').value = fxGraphUrl;
                 loadFile('fxGraph');
             }
+            if (postGradGraphUrl) {
+                document.getElementById('postGradGraphUrl').value = postGradGraphUrl;
+                loadFile('postGradGraph');
+            }
             if (generatedCodeUrl) {
                 document.getElementById('generatedCodeUrl').value = generatedCodeUrl;
                 loadFile('generatedCode');
+            }
+            if (generatedCppCodeUrl) {
+                document.getElementById('generatedCppCodeUrl').value = generatedCppCodeUrl;
+                loadFile('generatedCppCode');
             }
         };
 
@@ -417,7 +501,7 @@
             const containerWidth = document.querySelector('.editor-container').offsetWidth;
             const editorWidth = (containerWidth - divider.offsetWidth) / 2;
             fxGraph.style.width = `${editorWidth}px`;
-            generatedCode.style.width = `${editorWidth}px`;
+            postGradGraph.style.width = `${editorWidth}px`;
         }
 
         window.addEventListener('load', setInitialEditorWidths);
@@ -426,23 +510,23 @@
         function showJsonPopup(content, event) {
             const popup = document.getElementById('jsonPopup');
             const jsonContent = document.getElementById('jsonContent');
-            
+
             // Format the JSON nicely
             const formattedJson = JSON.stringify(content, null, 2);
             jsonContent.textContent = formattedJson;
-            
+
             // Position the popup near the click
             popup.style.left = `${event.pageX + 10}px`;
             popup.style.top = `${event.pageY + 10}px`;
-            
+
             // Show the popup
             popup.style.display = 'block';
-            
+
             // Adjust position if popup goes off screen
             const rect = popup.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
-            
+
             if (rect.right > viewportWidth) {
                 popup.style.left = `${event.pageX - rect.width - 10}px`;
             }
@@ -456,7 +540,7 @@
         }
 
         // Close popup when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const popup = document.getElementById('jsonPopup');
             if (event.target.closest('.json-popup') || event.target.closest('.line')) {
                 return;
@@ -465,4 +549,5 @@
         });
     </script>
 </body>
+
 </html>
