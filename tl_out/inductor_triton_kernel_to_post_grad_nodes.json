@@ -1,0 +1,785 @@
+{
+    "triton_poi_fused_cat_0": [
+        "cat_3"
+    ],
+    "triton_poi_fused_addmm_1": [
+        "constant_pad_nd_default_23"
+    ],
+    "triton_poi_fused_cat_2": [
+        "cat_6"
+    ],
+    "triton_poi_fused_cat_3": [
+        "cat_5"
+    ],
+    "triton_poi_fused_cat_4": [
+        "cat_9"
+    ],
+    "triton_poi_fused_cat_5": [
+        "cat_8"
+    ],
+    "triton_poi_fused_addmm_6": [
+        "constant_pad_nd_default_21"
+    ],
+    "triton_poi_fused_cat_7": [
+        "cat_25"
+    ],
+    "triton_poi_fused_cat_8": [
+        "cat_24"
+    ],
+    "triton_poi_fused_addmm_9": [
+        "constant_pad_nd_default_3"
+    ],
+    "triton_poi_fused_addmm_10": [
+        "constant_pad_nd_default_1"
+    ],
+    "triton_poi_fused_cat_permute_pooled_embs_auto_grad_11": [
+        "cat",
+        "permute_pooled_embs_auto_grad"
+    ],
+    "triton_tem_fused_addmm_12": [
+        "mm_default_101"
+    ],
+    "triton_per_fused_addmm_native_layer_norm_13": [
+        "constant_pad_nd_default_1"
+    ],
+    "triton_tem_fused_addmm_14": [
+        "mm_default_100"
+    ],
+    "triton_tem_fused_addmm_15": [
+        "mm_default_99"
+    ],
+    "triton_tem_fused_addmm_16": [
+        "mm_default_98"
+    ],
+    "triton_tem_fused_addmm_17": [
+        "mm_default_97"
+    ],
+    "triton_tem_fused_addmm_18": [
+        "mm_default_96"
+    ],
+    "triton_tem_fused_addmm_19": [
+        "mm_default_95"
+    ],
+    "triton_tem_fused_addmm_20": [
+        "mm_default_94"
+    ],
+    "triton_tem_fused_addmm_21": [
+        "mm_default_93"
+    ],
+    "triton_tem_fused_addmm_22": [
+        "mm_default_92"
+    ],
+    "triton_tem_fused_addmm_23": [
+        "mm_default_91"
+    ],
+    "triton_tem_fused_addmm_24": [
+        "mm_default_90"
+    ],
+    "triton_tem_fused_addmm_25": [
+        "mm_default_89"
+    ],
+    "triton_tem_fused_addmm_26": [
+        "mm_default_88"
+    ],
+    "triton_tem_fused_addmm_27": [
+        "mm_default_87"
+    ],
+    "triton_tem_fused_addmm_28": [
+        "mm_default_86"
+    ],
+    "triton_tem_fused_addmm_29": [
+        "mm_default_85"
+    ],
+    "triton_tem_fused_addmm_30": [
+        "mm_default_84"
+    ],
+    "triton_tem_fused_addmm_31": [
+        "mm_default_83"
+    ],
+    "triton_tem_fused_addmm_32": [
+        "mm_default_82"
+    ],
+    "triton_tem_fused_addmm_33": [
+        "mm_default_81"
+    ],
+    "triton_tem_fused_addmm_34": [
+        "mm_default_80"
+    ],
+    "triton_tem_fused_addmm_35": [
+        "mm_default_79"
+    ],
+    "triton_tem_fused_addmm_36": [
+        "mm_default_78"
+    ],
+    "triton_tem_fused_addmm_37": [
+        "mm_default_77"
+    ],
+    "triton_tem_fused_addmm_38": [
+        "mm_default_76"
+    ],
+    "triton_tem_fused_addmm_39": [
+        "mm_default_75"
+    ],
+    "triton_tem_fused_addmm_40": [
+        "mm_default_74"
+    ],
+    "triton_tem_fused_addmm_41": [
+        "mm_default_73"
+    ],
+    "triton_tem_fused_addmm_42": [
+        "mm_default_72"
+    ],
+    "triton_tem_fused_addmm_43": [
+        "mm_default_71"
+    ],
+    "triton_tem_fused_addmm_44": [
+        "mm_default_70"
+    ],
+    "triton_tem_fused_addmm_45": [
+        "mm_default_69"
+    ],
+    "triton_tem_fused_addmm_46": [
+        "mm_default_68"
+    ],
+    "triton_tem_fused_addmm_47": [
+        "mm_default_67"
+    ],
+    "triton_tem_fused_addmm_48": [
+        "mm_default_66"
+    ],
+    "triton_poi_fused_addmm_cat_49": [
+        "cat_1",
+        "constant_pad_nd_default_22"
+    ],
+    "triton_tem_fused_addmm_cat_50": [
+        "mm_default_65",
+        "cat_1",
+        "constant_pad_nd_default_22"
+    ],
+    "triton_poi_fused_cat_52": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_53": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_54": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_55": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_56": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_57": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_58": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_59": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_60": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_61": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_62": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_63": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_64": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_65": [
+        "cat_4"
+    ],
+    "triton_poi_fused_cat_66": [
+        "cat_4"
+    ],
+    "triton_tem_fused_addmm_67": [
+        "addmm_37"
+    ],
+    "triton_tem_fused_addmm_mul_native_layer_norm_sigmoid_71": [
+        "sub_343",
+        "mm_default_64",
+        "add_999",
+        "add_998",
+        "convert_element_type_192",
+        "mul_600",
+        "var_mean_36",
+        "rsqrt_36",
+        "sigmoid",
+        "mul_635",
+        "convert_element_type_193",
+        "mul_599",
+        "add_tensor_65"
+    ],
+    "triton_poi_fused_addmm_mul_sigmoid_72": [
+        "add_tensor_64",
+        "mul_659",
+        "sigmoid_2"
+    ],
+    "triton_tem_fused_addmm_mul_sigmoid_73": [
+        "mul_659",
+        "add_tensor_64",
+        "addmm_41",
+        "sigmoid_2"
+    ],
+    "triton_poi_fused_cat_74": [
+        "cat_7"
+    ],
+    "triton_tem_fused_addmm_clone_mul_native_layer_norm_sigmoid_76": [
+        "rsqrt_37",
+        "mm_default_63",
+        "add_1065",
+        "sigmoid_1",
+        "sub_364",
+        "convert_element_type_202",
+        "add_1064",
+        "clone",
+        "convert_element_type_203",
+        "mul_682",
+        "mul_639",
+        "mul_638",
+        "var_mean_37"
+    ],
+    "triton_tem_fused_addmm_78": [
+        "addmm_44"
+    ],
+    "triton_tem_fused_mm_79": [
+        "mm_1"
+    ],
+    "triton_tem_fused_addmm_81": [
+        "mm_default_60"
+    ],
+    "triton_poi_fused_gelu_82": [
+        "add_1481",
+        "erf",
+        "convert_element_type_251",
+        "mul_909",
+        "mul_907",
+        "convert_element_type_252",
+        "mul_908"
+    ],
+    "triton_tem_fused_addmm_83": [
+        "mm_default_59"
+    ],
+    "triton_poi_fused_addmm_84": [
+        "constant_pad_nd_default_20"
+    ],
+    "triton_tem_fused_addmm_85": [
+        "constant_pad_nd_default_20",
+        "addmm_default_8"
+    ],
+    "triton_poi_fused_clone_nan_to_num_relu_86": [
+        "clone_1",
+        "where_2",
+        "where_1",
+        "convert_element_type_198",
+        "scalar_tensor",
+        "eq_326",
+        "scalar_tensor_1",
+        "where",
+        "scalar_tensor_2",
+        "convert_element_type_197",
+        "isnan",
+        "eq_327",
+        "relu"
+    ],
+    "triton_tem_fused_addmm_clone_nan_to_num_relu_87": [
+        "clone_1",
+        "where_2",
+        "where_1",
+        "convert_element_type_198",
+        "scalar_tensor",
+        "eq_326",
+        "scalar_tensor_1",
+        "where",
+        "scalar_tensor_2",
+        "addmm_38",
+        "convert_element_type_197",
+        "isnan",
+        "eq_327",
+        "relu"
+    ],
+    "triton_tem_fused_addmm_88": [
+        "addmm_39"
+    ],
+    "triton_poi_fused_cat_90": [
+        "cat_10"
+    ],
+    "triton_poi_fused_clamp_nan_to_num_91": [
+        "convert_element_type_263",
+        "convert_element_type_262",
+        "eq_583",
+        "convert_element_type_264",
+        "clamp_max",
+        "where_5",
+        "where_3",
+        "scalar_tensor_4",
+        "scalar_tensor_5",
+        "clamp_min",
+        "convert_element_type_261",
+        "scalar_tensor_3",
+        "isnan_1",
+        "eq_584",
+        "where_4"
+    ],
+    "triton_tem_fused_baddbmm_clamp_nan_to_num_92": [
+        "convert_element_type_263",
+        "convert_element_type_262",
+        "convert_element_type_264",
+        "clamp_max",
+        "where_5",
+        "where_3",
+        "baddbmm",
+        "clamp_min",
+        "convert_element_type_261",
+        "scalar_tensor_3",
+        "isnan_1",
+        "scalar_tensor_5",
+        "eq_583",
+        "scalar_tensor_4",
+        "eq_584",
+        "where_4"
+    ],
+    "triton_poi_fused_cat_93": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_94": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_95": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_96": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_97": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_98": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_99": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_100": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_101": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_102": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_103": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_104": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_105": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_106": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_107": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_108": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_109": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_110": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_111": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_112": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_113": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_114": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_115": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_116": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_117": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_118": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_119": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_120": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_121": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_122": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_123": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_124": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_125": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_126": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_127": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_128": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_129": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_130": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_131": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_132": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_133": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_134": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_135": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_136": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_137": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_138": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_139": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_140": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_141": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_142": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_143": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_144": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_145": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_146": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_147": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_148": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_149": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_150": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_151": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_152": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_153": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_154": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_155": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_156": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_157": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_158": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_159": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_160": [
+        "cat_11"
+    ],
+    "triton_poi_fused_clone_161": [
+        "clone_2"
+    ],
+    "triton_poi_fused_clone_162": [
+        "clone_3"
+    ],
+    "triton_poi_fused_clone_163": [
+        "clone_4"
+    ],
+    "triton_poi_fused_clone_164": [
+        "clone_5"
+    ],
+    "triton_poi_fused_clone_165": [
+        "clone_6"
+    ],
+    "triton_poi_fused_clone_166": [
+        "clone_7"
+    ],
+    "triton_poi_fused_cat_167": [
+        "cat_11"
+    ],
+    "triton_poi_fused_cat_168": [
+        "cat_11"
+    ],
+    "triton_tem_fused_bmm_169": [
+        "bmm"
+    ],
+    "triton_tem_fused_addmm_171": [
+        "mm_default_58"
+    ],
+    "triton_tem_fused_addmm_native_layer_norm_174": [
+        "rsqrt_140",
+        "mul_2297",
+        "var_mean_140",
+        "add_3649",
+        "mul_2298",
+        "sub_1192",
+        "mm_default_17",
+        "add_3650",
+        "convert_element_type_615"
+    ],
+    "triton_tem_fused_bmm_178": [
+        "bmm_1"
+    ],
+    "triton_tem_fused_bmm_native_layer_norm_180": [
+        "mul_1355",
+        "add_2119",
+        "sub_677",
+        "add_2120",
+        "convert_element_type_307",
+        "bmm_2",
+        "rsqrt_57",
+        "var_mean_57",
+        "mul_1354"
+    ],
+    "triton_poi_fused_addmm_184": [
+        "constant_pad_nd_default_2"
+    ],
+    "triton_tem_fused_addmm_185": [
+        "constant_pad_nd_default_2",
+        "mm_default_13"
+    ],
+    "triton_tem_fused_addmm_native_layer_norm_187": [
+        "add_3847",
+        "add_3848",
+        "var_mean_152",
+        "sub_1259",
+        "add_tensor_13",
+        "mul_2413",
+        "convert_element_type_661",
+        "mul_2412",
+        "rsqrt_152",
+        "mm_default_12",
+        "convert_element_type_660"
+    ],
+    "triton_poi_fused_addmm_native_layer_norm_189": [
+        "convert_element_type_672",
+        "mul_2430",
+        "add_3876",
+        "var_mean_154",
+        "rsqrt_154",
+        "sub_1269",
+        "mul_2431",
+        "add_3877",
+        "constant_pad_nd_default"
+    ],
+    "triton_tem_fused_addmm_191": [
+        "mm_default_8"
+    ],
+    "triton_tem_fused_addmm_mul_native_layer_norm_sigmoid_195": [
+        "sub_1142",
+        "mul_2194",
+        "add_3496",
+        "rsqrt_134",
+        "sigmoid_34",
+        "convert_element_type_595",
+        "add_3495",
+        "var_mean_134",
+        "addmm_91",
+        "convert_element_type_594",
+        "mul_2193",
+        "mul_2201"
+    ],
+    "triton_poi_fused_bmm_197": [
+        "constant_pad_nd_default_8"
+    ],
+    "triton_poi_fused_bmm_198": [
+        "constant_pad_nd_default_9"
+    ],
+    "triton_tem_fused_bmm_199": [
+        "constant_pad_nd_default_8",
+        "constant_pad_nd_default_9",
+        "bmm_default"
+    ],
+    "triton_tem_fused_addmm_201": [
+        "mm_default_32"
+    ],
+    "triton_tem_fused_bmm_203": [
+        "bmm_10"
+    ],
+    "triton_tem_fused_bmm_native_layer_norm_204": [
+        "rsqrt_147",
+        "add_3768",
+        "mul_2365",
+        "convert_element_type_643",
+        "mul_2366",
+        "var_mean_147",
+        "sub_1232",
+        "bmm_11",
+        "add_3767"
+    ],
+    "triton_tem_fused_bmm_207": [
+        "bmm_9"
+    ],
+    "triton_tem_fused_addmm_209": [
+        "mm_default_19"
+    ],
+    "triton_tem_fused_addmm_210": [
+        "mul_2579",
+        "sigmoid_45",
+        "add_tensor_2",
+        "mm_default_1"
+    ],
+    "triton_poi_fused_addmm_nan_to_num_relu_211": [
+        "where_13",
+        "convert_element_type_722",
+        "relu_3",
+        "where_12",
+        "scalar_tensor_13",
+        "eq_1279",
+        "isnan_4",
+        "scalar_tensor_14",
+        "scalar_tensor_12",
+        "eq_1278",
+        "convert_element_type_721",
+        "where_14",
+        "add_tensor_4"
+    ],
+    "triton_tem_fused_addmm_nan_to_num_relu_212": [
+        "where_13",
+        "convert_element_type_722",
+        "relu_3",
+        "where_12",
+        "mm_default_3",
+        "scalar_tensor_13",
+        "eq_1279",
+        "isnan_4",
+        "scalar_tensor_14",
+        "scalar_tensor_12",
+        "eq_1278",
+        "convert_element_type_721",
+        "where_14",
+        "add_tensor_4"
+    ],
+    "triton_poi_fused_add_addmm_nan_to_num_relu_213": [
+        "eq_1271",
+        "where_10",
+        "relu_2",
+        "isnan_3",
+        "scalar_tensor_10",
+        "add_4072",
+        "convert_element_type_717",
+        "scalar_tensor_11",
+        "eq_1272",
+        "where_11",
+        "scalar_tensor_9",
+        "convert_element_type_716",
+        "where_9",
+        "add_tensor_5"
+    ],
+    "triton_poi_fused_add_addmm_full_like_mul_nan_to_num_relu_214": [
+        "scalar_tensor_16",
+        "isnan_5",
+        "add_tensor_3",
+        "where_15",
+        "scalar_tensor_15",
+        "convert_element_type_727",
+        "mul_2570",
+        "full",
+        "scalar_tensor_17",
+        "where_16",
+        "eq_1285",
+        "add_4094",
+        "where_17",
+        "add_4107",
+        "eq_1286",
+        "convert_element_type_726",
+        "mul_2559",
+        "relu_4"
+    ],
+    "triton_poi_fused_addmm_mul_sigmoid_215": [
+        "mul_2579",
+        "sigmoid_45",
+        "add_tensor_2"
+    ],
+    "triton_tem_fused_addmm_mul_native_layer_norm_sigmoid_217": [
+        "var_mean_165",
+        "add_4124",
+        "convert_element_type_735",
+        "rsqrt_165",
+        "add_4123",
+        "mm_default",
+        "sub_1353",
+        "mul_2585",
+        "mul_2584",
+        "convert_element_type_734",
+        "add_tensor_1",
+        "sigmoid_46",
+        "mul_2592"
+    ]
+}
