@@ -237,9 +237,7 @@
                         populateEditor(fxGraph, fxGraphData, preToPost);
                         populateEditor(postGradGraph, postGradGraphData, postToPre);
                         populateEditor(generatedCode, codeData, pyCodeToPost);
-                        populateEditor(postGradGraph, postGradGraphData, postToPyCode);
                         populateEditor(generatedCppCode, cppCodeData, cppCodeToPost);
-                        populateEditor(postGradGraph, postGradGraphData, postToCppCode);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
@@ -401,6 +399,16 @@
             if (postGradGraphCodeUrl) {
                 if (fxGraphUrl) newUrl += '&';
                 newUrl += 'postGradGraphCodeUrl=' + encodeURIComponent(postGradGraphCodeUrl);
+            }
+
+            if (generatedCodeUrl) {
+                if (fxGraphUrl) newUrl += '&';
+                newUrl += 'generatedCodeUrl=' + encodeURIComponent(generatedCodeUrl);
+            }
+
+            if (generatedCppCodeUrl) {
+                if (fxGraphUrl) newUrl += '&';
+                newUrl += 'generatedCppCodeUrl=' + encodeURIComponent(generatedCppCodeUrl);
             }
 
             window.history.pushState({}, '', newUrl);
