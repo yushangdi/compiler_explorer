@@ -93,7 +93,6 @@ def extract_graph_id(fx_graph_lines):
 
 
 def create_node_mapping(json_data, fx_graph_id, json_data_2):
-    print("enter creating node mapping")
     """Create bidirectional mappings between pre_grad graph nodes and post_grad graph code nodes"""
     try:
         pre_to_post = defaultdict(set)
@@ -156,7 +155,7 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
         raise
 
 
-def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, post_grad_graph_lines, py_code_lines):
+def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, post_grad_graph_lines, py_code_lines, cpp_code_lines):
 
     def valid_line(line):
         stripped = line.strip()
@@ -271,8 +270,11 @@ def process_mapping():
         fx_graph_lines = data["fxGraphData"]
         post_grad_graph_lines = data["postGradGraphData"]
         python_code_lines = data["codeData"]
+        cpp_code_lines = data["cppCodeData"]
 
         # Read the local inductor triton kernel to post grad nodes mapping
+        # TODO: this path is hardcoded for now, need to make it configurable
+        # maybe consolidate with the other json parsing for pre_grad to post_grad
         file_path = 'tl_out/inductor_triton_kernel_to_post_grad_nodes.json'
         kernel_post_grad_mapping_json = read_local_json_file(file_path)
         if not kernel_post_grad_mapping_json:
@@ -301,7 +303,7 @@ def process_mapping():
 
         line_mappings = convert_node_mappings_to_line_numbers(
             node_mappings, fx_graph_lines, post_grad_graph_lines, 
-            python_code_lines
+            python_code_lines, cpp_code_lines
         )
 
         print(analyze_unmatched_lines(post_grad_graph_lines, line_mappings))

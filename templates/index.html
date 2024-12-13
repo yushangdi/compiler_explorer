@@ -183,6 +183,9 @@
         let postToPre = {};
         let pyCodeToPost = {};
         let postToPyCode = {};
+        let postToCppCode = {};
+        let cppCodeToPost = {};
+
         let jsonData = null;
 
         async function loadFile(editorId) {
@@ -222,24 +225,28 @@
                 }
 
                 // Only process mapping if we have both sets of data
-                if (fxGraphData && postGradGraphData && codeData) {
-                    const mappings = await processMapping(fxGraphData, postGradGraphData, codeData);
+                if (fxGraphData && postGradGraphData && codeData && cppCodeData) {
+                    const mappings = await processMapping(fxGraphData, postGradGraphData, codeData, cppCodeData);
                     if (mappings) {
                         preToPost = mappings.preToPost;
                         postToPre = mappings.postToPre;
                         pyCodeToPost = mappings.pyCodeToPost;
                         postToPyCode = mappings.postToPyCode;
+                        // cppCodeToPost = mappings.cppCodeToPost;
+                        // postToCppCode = mappings.postToCppCode;
                         populateEditor(fxGraph, fxGraphData, preToPost);
                         populateEditor(postGradGraph, postGradGraphData, postToPre);
                         populateEditor(generatedCode, codeData, pyCodeToPost);
                         populateEditor(postGradGraph, postGradGraphData, postToPyCode);
+                        populateEditor(generatedCppCode, cppCodeData, cppCodeToPost);
+                        populateEditor(postGradGraph, postGradGraphData, postToCppCode);
                     }
                 } else {
                     // If we only have one set of data, just populate that editor
                     const editor = document.getElementById(editorId);
                     const mapping = editorId === 'fxGraph' ? preToPost :
                         editorId === 'postGradGraph' ? postToPre :
-                            editorId === 'generatedCode' ? pyCodeToPost : null;
+                            editorId === 'generatedCode' ? pyCodeToPost : cppCodeToPost;
                     populateEditor(editor, lines, mapping);
                 }
 
@@ -265,7 +272,7 @@
             }
         }
 
-        async function processMapping(fxGraphData, postGradGraphData, codeData) {
+        async function processMapping(fxGraphData, postGradGraphData, codeData, cppCodeData) {
             try {
                 const response = await fetch('/process_mapping', {
                     method: 'POST',
@@ -275,7 +282,8 @@
                     body: JSON.stringify({
                         fxGraphData,
                         postGradGraphData,
-                        codeData
+                        codeData,
+                        cppCodeData
                     })
                 });
 
@@ -434,19 +442,22 @@
         postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, fxGraph, postToPre));
         generatedCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCode, postGradGraph, pyCodeToPost));
         postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCode, postToPyCode));
-
-
+        generatedCppCode.addEventListener('mousemove', (event) => handleMouseMove(event, generatedCppCode, postGradGraph, cppCodeToPost));
+        postGradGraph.addEventListener('mousemove', (event) => handleMouseMove(event, postGradGraph, generatedCppCode, postToCppCode));
 
         fxGraph.addEventListener('click', (event) => handleClick(event, fxGraph, postGradGraph, preToPost));
         postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, fxGraph, postToPre));
         generatedCode.addEventListener('click', (event) => handleClick(event, generatedCode, postGradGraph, pyCodeToPost));
         postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, generatedCode, postToPyCode));
+        generatedCppCode.addEventListener('click', (event) => handleClick(event, generatedCppCode, postGradGraph, cppCodeToPost));
+        postGradGraph.addEventListener('click', (event) => handleClick(event, postGradGraph, generatedCppCode, postToCppCode));
 
         fxGraph.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         postGradGraph.addEventListener('mouseout', () => fxGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         generatedCode.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
         postGradGraph.addEventListener('mouseout', () => generatedCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
-
+        generatedCppCode.addEventListener('mouseout', () => postGradGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
+        postGradGraph.addEventListener('mouseout', () => generatedCppCode.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')));
 
 
         // Load from URL parameters if present
