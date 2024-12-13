@@ -128,7 +128,8 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
                         (n, parent_key) for n in current_node.get("from_node", [])
                     )
 
-        # return {"preToPost": pre_to_post, "postToPre": post_to_pre, "postToPyCode": post_to_py_code, "pyCodeToPost": py_code_to_post}
+        print("Finished creating node mappings")
+       #print("pyCodeToPost: ", py_code_to_post)
         return {"preToPost": pre_to_post, "postToPre": post_to_pre, "pyCodeToPost": py_code_to_post}
 
     except AttributeError as e:
@@ -213,16 +214,20 @@ def convert_node_mappings_to_line_numbers(node_mappings, pre_grad_graph_lines, p
                     line_post_to_pre[gen_line_num].append(
                         pre_grad_node_to_lines[fx_node_name]
                     )
+    
+    # print("node_mappings[pyCodeToPost]:", node_mappings["pyCodeToPost"])
     # Process pyCodeToPost using lookup maps
     for py_kernel_name, post_grad_node_names in node_mappings["pyCodeToPost"].items():
         if py_kernel_name in py_kernel_to_lines:
             gen_line_num = py_kernel_to_lines[py_kernel_name]
             line_py_code_to_post[gen_line_num] = []
             for post_grad_node_name in post_grad_node_names:
-                if post_grad_node_name in py_kernel_to_lines:
+                if post_grad_node_name in post_grad_node_to_lines:
                     line_py_code_to_post[gen_line_num].append(
-                        py_kernel_to_lines[post_grad_node_name]
+                        post_grad_node_to_lines[post_grad_node_name]
                     )
+    
+    print("line_py_code_to_post: ", line_py_code_to_post)
 
     return {"preToPost": line_pre_to_post, "postToPre": line_post_to_pre, "pyCodeToPost": line_py_code_to_post}
 
@@ -258,6 +263,7 @@ def process_mapping():
         fx_graph_lines = data["fxGraphData"]
         post_grad_graph_lines = data["postGradGraphData"]
         python_code_lines = data["codeData"]
+        print("process_mapping: Received data", len(python_code_lines))
 
         # Read the local inductor triton kernel to post grad nodes mapping
         file_path = 'tl_out/inductor_triton_kernel_to_post_grad_nodes.json'
@@ -284,9 +290,8 @@ def process_mapping():
 
         # Create mappings from pre_grad graph nodes to post_grad graph code nodes
         node_mappings = create_node_mapping(json_data, fx_graph_id, kernel_post_grad_mapping_json)
-        print("Node mappings created")
-        # print(node_mappings["pyCodeToPost"])
-        # print(node_mappings)
+        print("process_mapping: Node mappings created")
+
         line_mappings = convert_node_mappings_to_line_numbers(
             node_mappings, fx_graph_lines, post_grad_graph_lines, 
             python_code_lines
