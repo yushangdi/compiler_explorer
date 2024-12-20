@@ -7,14 +7,14 @@ class TestProcessMapping(unittest.TestCase):
         self.node_json = {
             "cat_22": [
                 {
-                    "node_name": "cat_default_2",
+                    "name": "cat_default_2",
                     "target": "aten.cat.default",
                     "graph_id": 140226430922096,
                     "pass_name": "Interpreter_PropagateUnbackedSymInts",
                     "action": "create",
                     "from_node": [
                         {
-                            "node_name": "cat_10",
+                            "name": "cat_10",
                             "target": "aten.cat.default",
                             "graph_id": 140226430922096,
                             "pass_name": "pattern_matcher",
@@ -22,7 +22,7 @@ class TestProcessMapping(unittest.TestCase):
                             "from_node": []
                         },
                         {
-                            "node_name": "cat_10",
+                            "name": "cat_10",
                             "target": "aten.cat.default",
                             "graph_id": 140226430922096,
                             "pass_name": "[Pre grad(predispatch IR)]Apply normalization pass",

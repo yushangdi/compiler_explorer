@@ -121,16 +121,16 @@ def create_node_mapping(json_data, fx_graph_id, json_data_2):
             for node in node_array:
                 # Check the current node first
                 if node.get("graph_id") == fx_graph_id:
-                    pre_to_post[node["node_name"]].add(outer_key)
-                    post_to_pre[outer_key].add(node["node_name"])
+                    pre_to_post[node["name"]].add(outer_key)
+                    post_to_pre[outer_key].add(node["name"])
 
                 # Check nested from_node array recursively
                 stack = [(n, outer_key) for n in node.get("from_node", [])]
                 while stack:
                     current_node, parent_key = stack.pop()
                     if current_node.get("graph_id") == fx_graph_id:
-                        pre_to_post[current_node["node_name"]].add(parent_key)
-                        post_to_pre[parent_key].add(current_node["node_name"])
+                        pre_to_post[current_node["name"]].add(parent_key)
+                        post_to_pre[parent_key].add(current_node["name"])
                     stack.extend(
                         (n, parent_key) for n in current_node.get("from_node", [])
                     )
